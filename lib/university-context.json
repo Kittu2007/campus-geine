@@ -8,7 +8,10 @@
     "name": "Anurag University",
     "established": "2020",
     "type": "Private Multidisciplinary University",
-    "recognition": ["UGC Recognized", "NBA Accredited"],
+    "recognition": [
+      "UGC Recognized",
+      "NBA Accredited"
+    ],
     "location": {
       "address": "Venkatapur, Ghatkesar",
       "district": "Medchal–Malkajgiri",
@@ -71,21 +74,36 @@
       "phd": "Ph.D in Engineering"
     },
     "management": {
-      "ug": ["BBA"],
-      "pg": ["MBA"],
+      "ug": [
+        "BBA"
+      ],
+      "pg": [
+        "MBA"
+      ],
       "phd": "Ph.D in Management"
     },
     "pharmacy": {
-      "programs": ["B.Pharm", "M.Pharm", "Pharm.D", "Ph.D"]
+      "programs": [
+        "B.Pharm",
+        "M.Pharm",
+        "Pharm.D",
+        "Ph.D"
+      ]
     },
     "agriculture": {
-      "ug": ["B.Sc (Hons) Agriculture"]
+      "ug": [
+        "B.Sc (Hons) Agriculture"
+      ]
     },
     "medical_sciences": {
-      "programs": ["MBBS and Allied Health Sciences"]
+      "programs": [
+        "MBBS and Allied Health Sciences"
+      ]
     },
     "nursing": {
-      "programs": ["B.Sc Nursing"]
+      "programs": [
+        "B.Sc Nursing"
+      ]
     }
   },
   "admissions": {
@@ -115,9 +133,18 @@
   },
   "scholarships": {
     "merit_anurag_cet": [
-      { "rank": "1-10", "waiver": "100% tuition" },
-      { "rank": "11-25", "waiver": "50% tuition" },
-      { "rank": "26-100", "waiver": "25% tuition" }
+      {
+        "rank": "1-10",
+        "waiver": "100% tuition"
+      },
+      {
+        "rank": "11-25",
+        "waiver": "50% tuition"
+      },
+      {
+        "rank": "26-100",
+        "waiver": "25% tuition"
+      }
     ],
     "other": [
       "EWS / Need Based",
@@ -193,43 +220,245 @@
   "intents": [
     {
       "name": "Welcome",
-      "training_phrases": ["Hi", "Hello", "Hey", "Good morning", "Good evening"],
+      "training_phrases": [
+        "Hi",
+        "Hello",
+        "Hey",
+        "Good morning",
+        "Good evening"
+      ],
       "response": "Welcome to Anurag University Student Support 🤝\nHow can I help you today?\n\nAsk about Admissions, Courses, Fees, Placements, Results, Scholarships or Hostel."
     },
     {
       "name": "Location",
-      "training_phrases": ["University address", "Where is campus?", "Location"],
+      "training_phrases": [
+        "University address",
+        "Where is campus?",
+        "Location"
+      ],
       "response": "Anurag University is located at Venkatapur, Ghatkesar, Hyderabad, Telangana – 500088."
     },
     {
       "name": "Courses",
-      "training_phrases": ["Available programs", "Engineering branches", "UG PG courses"],
+      "training_phrases": [
+        "Available programs",
+        "Engineering branches",
+        "UG PG courses"
+      ],
       "response": "Anurag University offers UG, PG and Ph.D programs in Engineering, Management, Pharmacy, Agriculture, Nursing and Medical Sciences."
     },
     {
       "name": "Admissions",
-      "training_phrases": ["How to apply?", "Admission process", "Apply for B.Tech"],
+      "training_phrases": [
+        "How to apply?",
+        "Admission process",
+        "Apply for B.Tech"
+      ],
       "response": "Apply via admissions portal: https://admissions.anurag.edu.in/\nAdmissions based on AnuragCET, EAPCET, JEE or TS ICET depending on course."
     },
     {
       "name": "Fees",
-      "training_phrases": ["B.Tech fees", "MBA fees", "Fee structure"],
+      "training_phrases": [
+        "B.Tech fees",
+        "MBA fees",
+        "Fee structure"
+      ],
       "response": "B.Tech approx ₹2.85L per year.\nHostel ₹90K–₹1.2L per year.\nExact fees vary by branch and category. Check official website."
     },
     {
       "name": "Placements",
-      "training_phrases": ["Placement details", "Average package", "Top recruiters"],
+      "training_phrases": [
+        "Placement details",
+        "Average package",
+        "Top recruiters"
+      ],
       "response": "Highest offers up to 32–38 LPA.\nAverage approx 4–6 LPA.\n100+ recruiters with dedicated training & placement cell."
     },
     {
       "name": "Results",
-      "training_phrases": ["Check results", "Semester results"],
+      "training_phrases": [
+        "Check results",
+        "Semester results"
+      ],
       "response": "Results are available at: https://anurag.edu.in/results/"
     },
     {
       "name": "Hostel",
-      "training_phrases": ["Hostel available?", "Accommodation details"],
+      "training_phrases": [
+        "Hostel available?",
+        "Accommodation details"
+      ],
       "response": "Separate boys and girls hostels with Wi-Fi, mess and security.\nFees approx ₹90K–₹1.2L per year."
     }
-  ]
+  ],
+  "academic_regulations_btech": {
+    "document_title": "Academic Regulations for Bachelor of Technology (B.Tech.) Program",
+    "academic_year": "2025-26",
+    "established_under": "Telangana State Private Universities Act No.13, 2020",
+    "duration": {
+      "regular": {
+        "years": 4,
+        "semesters": 8,
+        "max_years_allowed": 6,
+        "semester_duration_weeks": 22
+      },
+      "lateral_entry": {
+        "years": 3,
+        "max_years_allowed": 5
+      }
+    },
+    "program_codes": {
+      "01": "Civil Engineering",
+      "02": "Electrical and Electronics Engineering",
+      "03": "Mechanical Engineering",
+      "04": "Electronics and Communication Engineering",
+      "05": "Computer Science and Engineering",
+      "06": "Artificial Intelligence",
+      "07": "Artificial Intelligence & Machine Learning",
+      "09": "CSE (Cyber Security)",
+      "10": "CSE (Data Science)",
+      "11": "Electronics and Computer Engineering",
+      "12": "Information Technology"
+    },
+    "assessment_strategy": {
+      "total_marks_per_course": 100,
+      "course_types": {
+        "Exploratory_Experiential": {
+          "CIE": 80,
+          "SEE": 20,
+          "min_pass_percentage": 40
+        },
+        "Theoretical": {
+          "CIE": 50,
+          "SEE": 50,
+          "min_pass_percentage": 40
+        },
+        "Lab_Practical": {
+          "CIE": 50,
+          "SEE": 50,
+          "min_pass_percentage": 40
+        },
+        "Guided_Inquiry": {
+          "CIE": 80,
+          "SEE": 20,
+          "min_pass_percentage": 40
+        },
+        "Projects": {
+          "CIE": 60,
+          "SEE": 40
+        },
+        "MOOCs": {
+          "credits_limit_percentage": 5
+        }
+      }
+    },
+    "grading_system": {
+      "scale": "10-point absolute grading",
+      "grades": [
+        {
+          "grade": "O",
+          "points": 10,
+          "percentage_range": ">=90"
+        },
+        {
+          "grade": "A+",
+          "points": 9,
+          "percentage_range": "80-89"
+        },
+        {
+          "grade": "A",
+          "points": 8,
+          "percentage_range": "70-79"
+        },
+        {
+          "grade": "B+",
+          "points": 7,
+          "percentage_range": "60-69"
+        },
+        {
+          "grade": "B",
+          "points": 6,
+          "percentage_range": "50-59"
+        },
+        {
+          "grade": "C",
+          "points": 5,
+          "percentage_range": "40-49"
+        },
+        {
+          "grade": "F",
+          "points": 0,
+          "percentage_range": "<40"
+        },
+        {
+          "grade": "Ab",
+          "points": 0
+        }
+      ]
+    },
+    "attendance_requirements": {
+      "minimum_percentage": 75,
+      "relaxations": [
+        {
+          "max_relaxation": 10,
+          "grounds": "Medical emergency",
+          "requirement": "Medical certificate"
+        },
+        {
+          "max_relaxation": 10,
+          "grounds": "NSS/NCC/Sports",
+          "requirement": "Prior approval and participation certificate"
+        },
+        {
+          "max_relaxation": 15,
+          "grounds": "Pregnancy (Adult female students)",
+          "requirement": "Medical certificate and VC approval"
+        }
+      ]
+    },
+    "passing_standards": {
+      "min_sgpa_per_semester": 5.0,
+      "min_cgpa_for_degree": 5.0,
+      "min_grade_per_course": "C (Grade Point >= 5)"
+    },
+    "promotion_rules_regular": {
+      "I_to_II": "50% credits up to I Year II Semester",
+      "II_to_III": "60% credits up to II Year",
+      "III_to_IV": "60% credits up to III Year"
+    },
+    "promotion_rules_lateral_entry": {
+      "II_to_III": "50% credits up to II Year",
+      "III_to_IV": "60% credits up to III Year"
+    },
+    "degree_requirements": {
+      "total_credits_regular": 160,
+      "total_credits_lateral_entry": 120,
+      "honors_or_minor_extra_credits": 18,
+      "conditions": [
+        "Minimum CGPA 5.0",
+        "No dues",
+        "No disciplinary action"
+      ]
+    },
+    "award_of_class": {
+      "first_class_with_distinction": "CGPA >= 8.0 (regular completion, no detention)",
+      "first_class": "6.5 <= CGPA < 8.0",
+      "second_class": "5.5 <= CGPA < 6.5",
+      "pass_class": "5.0 <= CGPA < 5.5"
+    },
+    "gpa_calculation": {
+      "formula": "GPA = Σ(Ci × Gi) / Σ(Ci)",
+      "percentage_conversion": "Percentage = (CGPA - 0.5) × 10",
+      "rounding": "Rounded to two decimal places"
+    },
+    "exit_policy": {
+      "multiple_entry_exit": true,
+      "academic_bank_of_credits": true,
+      "abc_registration_within_months": 6
+    },
+    "termination_conditions": [
+      "Failure to complete within maximum duration",
+      "Disciplinary violation"
+    ]
+  }
 }
