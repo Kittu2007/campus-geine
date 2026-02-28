@@ -1,22 +1,43 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
 require('dotenv').config({ path: '.env.local' });
 
-async function listFreeModels() {
-    const cleanKey = (process.env.OPENROUTER_API_KEY || '').replace(/\s/g, '');
+async function testHistory() {
+    const rawKey = process.env.GEMINI_API_KEY;
+    const cleanKey = rawKey ? rawKey.replace(/\s/g, '') : '';
 
-    const res = await fetch('https://openrouter.ai/api/v1/models', {
-        headers: { 'Authorization': `Bearer ${cleanKey}` }
+    if (!cleanKey) {
+        console.error("NO KEY");
+        return;
+    }
+
+    const genAI = new GoogleGenerativeAI(cleanKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    const systemPrompt = "You are Campus Buddy.";
+
+    const history = [
+        { role: 'user', content: 'where is uni located' },
+        { role: 'assistant', content: 'Anurag University is located at Venkatapur.' }
+    ];
+    const message = "who are you";
+
+    let conversationContext = systemPrompt + '\n\n--- PREVIOUS CONVERSATION ---\n';
+    history.slice(-6).forEach(h => {
+        if (h.role && h.content) {
+            conversationContext += `${h.role === 'user' ? 'User' : 'Assistant'}: ${h.content}\n`;
+        }
     });
-    const data = await res.json();
 
-    // Filter for free models
-    const freeModels = data.data?.filter(m =>
-        m.id.includes(':free') || (m.pricing?.prompt === '0' && m.pricing?.completion === '0')
-    ) || [];
+    conversationContext += `\n--- CURRENT USER MESSAGE ---\nUser: ${message}\nAssistant: `;
 
-    console.log(`Found ${freeModels.length} free models:\n`);
-    freeModels.forEach(m => {
-        console.log(`- ${m.id} (context: ${m.context_length})`);
-    });
+    console.log("PROMPT:\n", conversationContext);
+
+    try {
+        const result = await model.generateContent(conversationContext);
+        console.log("SUCCESS:", result.response.text());
+    } catch (e) {
+        console.error("FAIL:", e.message);
+    }
 }
 
-listFreeModels().catch(console.error);
+testHistory();

@@ -3,16 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/firebase/AuthContext'
 import { Button } from '@/components/ui/button'
-import {
-    Send,
-    Bot,
-    User,
-    AlertCircle,
-    Loader2,
-    Copy,
-    Check,
-    Volume2,
-} from 'lucide-react'
+import { Send, Bot, User, AlertCircle, Loader2, Copy, Check, Volume2 } from 'lucide-react'
 
 // Message Structure
 interface Message {
@@ -94,23 +85,27 @@ export default function ChatPage() {
         const userMessage = (text || input).trim()
         if (!userMessage || loading) return
 
-        // 1. Reset UI State
+        // 1. Reset UI State & Animations
         setInput('')
         setSendAnim(true)
         setTimeout(() => setSendAnim(false), 1500)
 
-        // Add user msg & placeholder bot msg
-        setMessages(prev => [
-            ...prev,
+        // 2. Add user msg & placeholder bot msg
+        const newMessages: Message[] = [
+            ...messages,
             { role: 'user', content: userMessage },
             { role: 'assistant', content: '' }
-        ])
+        ]
+        setMessages(newMessages)
         setLoading(true)
 
         try {
             const token = await user?.getIdToken()
 
-            // 2. Network Fetch Setup
+            // 3. Keep memory precise for backend (Strip out system error messages)
+            const cleanHistoryForBackend = messages.filter(m => !m.isError)
+
+            // 4. Network Fetch against valid backend handler
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
@@ -119,21 +114,20 @@ export default function ChatPage() {
                 },
                 body: JSON.stringify({
                     message: userMessage,
-                    history: messages.slice(-10), // Limit history depth
+                    history: cleanHistoryForBackend,
                 }),
             })
 
-            // 3. Strict JSON Parsing
+            // 5. Strict JSON Parsing Logic (DO NOT CRASH ON FAILS)
             let data: any
             try {
                 data = await response.json()
-                console.log('[chat-debug] Full Response Data:', data)
             } catch (parseError) {
-                console.error('[chat-error] Failed to parse JSON response:', parseError)
-                throw new Error('Server returned invalid data formatting.')
+                console.error('[chat-error] Non-JSON payload returned by Vercel/Node edge:', parseError)
+                throw new Error('Server returned an unrecognizable response.')
             }
 
-            // 4. Handle Valid JSON Responses via Schema
+            // 6. Process Schema Response
             if (data && data.success === true) {
                 // Success path
                 setMessages(prev => {
@@ -146,8 +140,8 @@ export default function ChatPage() {
                     return updated
                 })
             } else {
-                // Backend structured error path (data.success === false)
-                console.error(`[chat-error] API returned logical error:`, data?.error)
+                // Known schema API Error (data.success === false)
+                console.error(`[chat-error] API returned programmatic error:`, data?.error)
                 setMessages(prev => {
                     const updated = [...prev]
                     updated[updated.length - 1] = {
@@ -160,19 +154,16 @@ export default function ChatPage() {
             }
 
         } catch (err: any) {
-            // 5. Hard Network or Critical Parsing Errors
-            console.error('[chat-error] Hard Client Exception:', err)
+            // 7. Hard Network Failures or Unhandled Exceptions
+            console.error('[chat-error] Hard Client Network Exception:', err)
 
-            let displayMessage = 'Unable to reach the AI service right now. Please check your network connection.'
-            if (err.message.includes('parsing')) {
-                displayMessage = 'The server returned an unrecognizable response. Please contact support.'
-            }
+            const displayMessage = err.message || 'Unable to reach the AI service right now. Please check your network connection.'
 
             setMessages(prev => {
                 const updated = [...prev]
                 updated[updated.length - 1] = {
                     role: 'assistant',
-                    content: displayMessage,
+                    content: `NETWORK/CLIENT ERROR: ${displayMessage}`,
                     isError: true
                 }
                 return updated
@@ -208,7 +199,7 @@ export default function ChatPage() {
             </div>
 
             {/* Chat Container */}
-            <div className="relative z-10 flex-1 overflow-y-auto px-4 py-6">
+            <div className="relative z-10 flex-1 overflow-y-auto px-4 py-6 text-sm md:text-base">
                 {messages.length === 0 ? (
                     /* Initial Welcome View */
                     <div className="flex flex-col items-center justify-center min-h-full text-center pb-32">
@@ -247,10 +238,10 @@ export default function ChatPage() {
                                 )}
 
                                 <div className={`max-w-[78%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-                                    <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
+                                    <div className={`rounded-2xl px-4 py-3 leading-relaxed ${msg.role === 'user'
                                             ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-sm shadow-lg shadow-blue-500/20'
                                             : msg.isError
-                                                ? 'bg-red-950/50 border border-red-900/50 text-red-200 rounded-tl-sm'
+                                                ? 'bg-red-950/70 border border-red-900 text-red-200 rounded-tl-sm font-medium shadow-lg shadow-red-900/10'
                                                 : 'bg-slate-800/70 border border-slate-700/50 text-slate-200 rounded-tl-sm backdrop-blur-sm'
                                         }`}>
                                         {msg.content === '' && loading && i === messages.length - 1 ? (
@@ -260,7 +251,7 @@ export default function ChatPage() {
                                                     <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:150ms]" />
                                                     <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:300ms]" />
                                                 </div>
-                                                <span className="text-xs">Thinking...</span>
+                                                <span className="text-xs">Processing...</span>
                                             </div>
                                         ) : (
                                             <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -305,7 +296,7 @@ export default function ChatPage() {
                             placeholder="Ask Campus Buddy anything..."
                             rows={1}
                             disabled={loading}
-                            className="flex-1 bg-transparent border-none outline-none resize-none text-white placeholder:text-slate-500 text-sm px-2 py-2 min-h-[40px] max-h-[120px] leading-relaxed"
+                            className="flex-1 bg-transparent border-none outline-none resize-none text-white placeholder:text-slate-500 px-3 py-2 min-h-[40px] max-h-[120px] leading-relaxed"
                             style={{ height: '40px' }}
                         />
                         <Button
@@ -314,8 +305,8 @@ export default function ChatPage() {
                             className={`shrink-0 w-10 h-10 rounded-xl p-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border-0 shadow-lg shadow-blue-500/30 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${sendAnim ? 'send-anim' : ''}`}
                         >
                             {loading
-                                ? <Loader2 className="w-4 h-4 animate-spin" />
-                                : <Send className="w-4 h-4" />
+                                ? <Loader2 className="w-4 h-4 text-white animate-spin" />
+                                : <Send className="w-4 h-4 text-white" />
                             }
                         </Button>
                     </div>
