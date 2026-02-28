@@ -46,6 +46,14 @@ export default function AdminComplaintsPage() {
     const [isResolving, setIsResolving] = useState(false)
 
     useEffect(() => {
+        // Read initial filter from URL if present
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search)
+            const f = params.get('filter')
+            if (f && ['all', 'pending', 'in_progress', 'resolved'].includes(f)) {
+                setFilter(f)
+            }
+        }
         fetchComplaints()
     }, [])
 
@@ -188,6 +196,12 @@ export default function AdminComplaintsPage() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Badge variant="outline" className="capitalize text-xs">{complaint.category}</Badge>
+                                                <Badge className={`${status.color} border shrink-0 bg-transparent text-xs`}>
+                                                    <status.icon className="w-3 h-3 mr-1" />
+                                                    {status.label}
+                                                </Badge>
+                                            </div>
+                                            <div className="flex items-center gap-2 mb-2">
                                                 <span className="text-xs text-slate-500">Room {complaint.room_no}</span>
                                                 <span className="text-xs text-slate-500">·</span>
                                                 <span className="text-xs text-slate-500">

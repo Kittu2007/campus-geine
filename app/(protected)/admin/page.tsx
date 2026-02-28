@@ -20,7 +20,7 @@ export default async function AdminDashboardPage() {
 
     const stats = [
         { label: 'Total Complaints', value: complaintsCount || 0, icon: AlertTriangle, color: 'text-amber-400', href: '/admin/complaints' },
-        { label: 'Pending Complaints', value: pendingCount || 0, icon: AlertTriangle, color: 'text-red-400', href: '/admin/complaints' },
+        { label: 'Pending Complaints', value: pendingCount || 0, icon: AlertTriangle, color: 'text-red-400', href: '/admin/complaints?filter=pending' },
         { label: 'Total Resources', value: resourcesCount || 0, icon: BookOpen, color: 'text-emerald-400', href: '/admin/resources' },
         { label: 'Active Teams', value: teamsCount || 0, icon: Users, color: 'text-purple-400', href: '/teams' },
     ]
