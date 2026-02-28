@@ -97,7 +97,7 @@ Always be friendly and helpful. Always end with: "Is there anything else I can h
 
         // Build conversation history for Gemini
         const model = genAI.getGenerativeModel({
-            model: 'gemini-2.0-flash',
+            model: 'gemini-1.5-flash',
             systemInstruction: systemPrompt
         })
 
