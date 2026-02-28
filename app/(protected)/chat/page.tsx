@@ -44,6 +44,9 @@ export default function ChatPage() {
         setMessages(prev => [...prev, { role: 'user', content: userMessage }])
         setLoading(true)
 
+        // Add placeholder assistant message
+        setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+
         try {
             const token = await user?.getIdToken()
 
@@ -59,66 +62,40 @@ export default function ChatPage() {
                 }),
             })
 
-            if (!response.ok) {
-                throw new Error('Failed to get response')
-            }
+            const data = await response.json()
+            console.log('Chat API full response:', data)
 
-            const reader = response.body?.getReader()
-            const decoder = new TextDecoder()
-            let fullContent = ''
-            let sources: { question: string; category: string }[] = []
-
-            setMessages(prev => [...prev, { role: 'assistant', content: '' }])
-
-            while (reader) {
-                const { done, value } = await reader.read()
-                if (done) break
-
-                const chunk = decoder.decode(value)
-                const lines = chunk.split('\n')
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6))
-                            if (data.type === 'token') {
-                                fullContent += data.content
-                                setMessages(prev => {
-                                    const newMessages = [...prev]
-                                    newMessages[newMessages.length - 1] = {
-                                        role: 'assistant',
-                                        content: fullContent,
-                                        sources,
-                                    }
-                                    return newMessages
-                                })
-                            } else if (data.type === 'sources') {
-                                sources = data.sources
-                            }
-                        } catch {
-                            // ignore parse errors for incomplete chunks
-                        }
+            if (data?.success) {
+                setMessages(prev => {
+                    const updated = [...prev]
+                    updated[updated.length - 1] = {
+                        role: 'assistant',
+                        content: data.message || 'No response generated.',
+                        sources: data.sources || [],
                     }
-                }
+                    return updated
+                })
+            } else {
+                console.error('Chat API error:', data?.error)
+                setMessages(prev => {
+                    const updated = [...prev]
+                    updated[updated.length - 1] = {
+                        role: 'assistant',
+                        content: data?.error || 'Something went wrong. Please try again.',
+                    }
+                    return updated
+                })
             }
-
-            // Finalize sources on the last message
+        } catch (err) {
+            console.error('Fetch error:', err)
             setMessages(prev => {
-                const newMessages = [...prev]
-                newMessages[newMessages.length - 1] = {
-                    ...newMessages[newMessages.length - 1],
-                    sources,
-                }
-                return newMessages
-            })
-        } catch {
-            setMessages(prev => [
-                ...prev,
-                {
+                const updated = [...prev]
+                updated[updated.length - 1] = {
                     role: 'assistant',
-                    content: 'Sorry, I encountered an error. Please try again.',
-                },
-            ])
+                    content: 'Unable to reach the AI service. Please check your connection and try again.',
+                }
+                return updated
+            })
         } finally {
             setLoading(false)
         }

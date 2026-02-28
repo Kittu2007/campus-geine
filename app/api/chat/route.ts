@@ -36,14 +36,14 @@ export async function POST(request: NextRequest) {
         // Auth check via Bearer token
         const authHeader = request.headers.get('Authorization')
         if (!authHeader?.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+            return NextResponse.json({ success: false, message: '', error: 'Unauthorized' }, { status: 401 })
         }
 
         const userId = authHeader.slice(7).substring(0, 20)
 
         if (!checkRateLimit(userId)) {
             return NextResponse.json(
-                { error: 'Rate limit exceeded. Max 30 requests per hour.' },
+                { success: false, message: '', error: 'Rate limit exceeded. Max 30 requests per hour.' },
                 { status: 429 }
             )
         }
@@ -51,11 +51,11 @@ export async function POST(request: NextRequest) {
         const { message, history = [] } = await request.json()
 
         if (!message || typeof message !== 'string') {
-            return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+            return NextResponse.json({ success: false, message: '', error: 'Message is required' }, { status: 400 })
         }
 
         if (!cleanKey) {
-            return NextResponse.json({ error: 'AI service not configured' }, { status: 503 })
+            return NextResponse.json({ success: false, message: '', error: 'AI service not configured' }, { status: 503 })
         }
 
         // RAG: Try to find relevant FAQs
@@ -71,11 +71,11 @@ export async function POST(request: NextRequest) {
                 const queryWords = message.toLowerCase().split(/\s+/)
                 const scored = faqs.map(faq => {
                     const faqText = `${faq.question} ${faq.answer}`.toLowerCase()
-                    const score = queryWords.filter(w => w.length > 2 && faqText.includes(w)).length
+                    const score = queryWords.filter((w: string) => w.length > 2 && faqText.includes(w)).length
                     return { ...faq, score }
                 })
                 scored.sort((a, b) => b.score - a.score)
-                contextChunks = scored.slice(0, 5).filter(f => f.score > 0)
+                contextChunks = scored.slice(0, 5).filter((f: { score: number }) => f.score > 0)
 
                 if (contextChunks.length === 0) {
                     contextChunks = faqs.slice(0, 5)
@@ -106,87 +106,78 @@ ${contextText}
 
 Always be friendly, helpful, and concise. Always end with: "Is there anything else I can help you with?"`
 
-        // Build conversation history for Gemini
+        // Build conversation history as a full prompt
+        const historyText = (history as { role: string; content: string }[])
+            .slice(-6)
+            .map(h => `${h.role === 'assistant' ? 'Assistant' : 'User'}: ${h.content}`)
+            .join('\n')
+
+        const fullPrompt = historyText
+            ? `${historyText}\nUser: ${message}\nAssistant:`
+            : message
+
         const model = genAI.getGenerativeModel({
             model: 'gemini-2.5-flash',
-            systemInstruction: systemPrompt
+            systemInstruction: systemPrompt,
+            generationConfig: {
+                maxOutputTokens: 800,
+            }
         })
 
-        const chatHistory = history.slice(-6).map((h: { role: string; content: string }) => ({
-            role: h.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: h.content }],
-        }))
+        // Safe Gemini extraction with timeout
+        const timeoutMs = 25000
+        const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Request timed out after 25 seconds')), timeoutMs)
+        )
 
-        // Ensure history doesn't end with a user message if we are about to send another one
-        // (Though usually history only contains completed turns)
+        const result = await Promise.race([
+            model.generateContent(fullPrompt),
+            timeoutPromise
+        ])
 
-        const chat = model.startChat({
-            history: chatHistory,
-        })
+        const response = await result.response
 
-        const result = await chat.sendMessageStream(message)
+        console.log('Gemini raw response candidates count:', response?.candidates?.length)
 
-        // Create streaming response
-        const encoder = new TextEncoder()
-        const stream = new ReadableStream({
-            async start(controller) {
-                // Send sources first
-                if (contextChunks.length > 0) {
-                    const sourcesData = JSON.stringify({
-                        type: 'sources',
-                        sources: contextChunks.map(c => ({
-                            question: c.question,
-                            category: c.category,
-                        })),
-                    })
-                    controller.enqueue(encoder.encode(`data: ${sourcesData}\n\n`))
-                }
+        const text =
+            response?.candidates?.[0]?.content?.parts
+                ?.map((p: { text?: string }) => p.text)
+                ?.filter(Boolean)
+                ?.join(' ') || 'No response generated. Please try again.'
 
-                try {
-                    for await (const chunk of result.stream) {
-                        const content = chunk.text()
-                        if (content) {
-                            const tokenData = JSON.stringify({ type: 'token', content })
-                            controller.enqueue(encoder.encode(`data: ${tokenData}\n\n`))
-                        }
-                    }
-                } catch (streamError) {
-                    console.error('Gemini Stream Error:', streamError)
-                    controller.enqueue(encoder.encode(`data: {"type":"error","content":"Stream interrupted"}\n\n`))
-                }
+        const sources = contextChunks.map(c => ({ question: c.question, category: c.category }))
 
-                controller.close()
-            },
-        })
-
-        return new Response(stream, {
-            headers: {
-                'Content-Type': 'text/event-stream',
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
-            },
-        })
+        return new Response(
+            JSON.stringify({
+                success: true,
+                message: text,
+                sources,
+            }),
+            {
+                headers: { 'Content-Type': 'application/json' }
+            }
+        )
     } catch (error: any) {
-        console.error('Chat API error details:', error?.message || error)
-        // Return a streaming-compatible error so the client always handles it gracefully
-        const encoder = new TextEncoder()
-        const errorStream = new ReadableStream({
-            start(controller) {
-                const errMsg = error?.status === 403
-                    ? 'The AI service key is invalid or expired. Please contact the administrator.'
-                    : error?.status === 429
-                        ? 'AI service rate limit reached. Please try again in a moment.'
-                        : 'An unexpected error occurred. Please try again.'
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'token', content: errMsg })}\n\n`))
-                controller.close()
+        console.error('Gemini Error:', error)
+
+        const friendlyMessage =
+            error?.status === 403
+                ? 'The AI service key is invalid or expired. Please contact the administrator.'
+                : error?.status === 429
+                    ? 'AI service rate limit reached. Please try again in a moment.'
+                    : error?.message?.includes('timed out')
+                        ? 'The AI took too long to respond. Please try again.'
+                        : 'Something went wrong. Please try again.'
+
+        return new Response(
+            JSON.stringify({
+                success: false,
+                message: '',
+                error: friendlyMessage
+            }),
+            {
+                headers: { 'Content-Type': 'application/json' }
             }
-        })
-        return new Response(errorStream, {
-            headers: {
-                'Content-Type': 'text/event-stream',
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
-            }
-        })
+        )
     }
 }
