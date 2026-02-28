@@ -178,7 +178,7 @@ export default function TeamDetailPage() {
                             </span>
                         )}
                         {team.event_url && (
-                            <a href={team.event_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-blue-400 hover:underline">
+                            <a href={team.event_url.startsWith('http') ? team.event_url : `https://${team.event_url}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-blue-400 hover:underline">
                                 <Globe className="w-4 h-4" /> Event Link
                             </a>
                         )}
