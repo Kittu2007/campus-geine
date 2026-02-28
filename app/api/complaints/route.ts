@@ -58,7 +58,9 @@ export async function POST(request: NextRequest) {
 
         if (!existingProfile) {
             console.log("Profile not found, lazy-creating profile for ID:", userId)
-            const { error: profileError } = await supabaseAdmin.from('profiles').insert({ id: userId, email: 'unknown@example.com' })
+            // Use a unique dummy email to avoid violating the profiles_email_key unique constraint
+            const dummyEmail = `user-${userId}@campusos.internal`
+            const { error: profileError } = await supabaseAdmin.from('profiles').insert({ id: userId, email: dummyEmail })
             if (profileError) {
                 console.error("Failed to lazy-create profile:", profileError)
                 return NextResponse.json({ error: 'Failed to initialize user profile', details: profileError.message }, { status: 500 })
