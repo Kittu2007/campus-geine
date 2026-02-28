@@ -14,14 +14,13 @@ export default function LoginPage() {
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
     const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN || 'anurag.edu.in'
-    const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost'
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setMessage(null)
 
-        if (!isDev && !email.endsWith(`@${allowedDomain}`)) {
+        if (!email.endsWith(`@${allowedDomain}`)) {
             setMessage({ type: 'error', text: `Only @${allowedDomain} emails are permitted.` })
             setLoading(false)
             return
@@ -77,17 +76,13 @@ export default function LoginPage() {
                                     required
                                 />
                             </div>
-                            {isDev && (
-                                <p className="text-xs text-amber-400/80">
-                                    ⚡ Dev mode: any email domain accepted
-                                </p>
-                            )}
+
                         </div>
 
                         {message && (
                             <div className={`flex items-start gap-2 p-3 rounded-lg text-sm ${message.type === 'success'
-                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                    : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
                                 }`}>
                                 {message.type === 'success' ? (
                                     <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
