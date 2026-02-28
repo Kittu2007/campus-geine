@@ -58,7 +58,10 @@ export function Navbar() {
                 </Link>
 
                 <div className="flex items-center gap-1">
-                    {navLinks.map(link => {
+                    {[
+                        ...navLinks,
+                        { href: `/profile/${user.uid}`, label: 'Profile', icon: User }
+                    ].map(link => {
                         const Icon = link.icon
                         const active = pathname === link.href
                         return (
@@ -134,7 +137,10 @@ export function Navbar() {
 
             {/* Mobile Bottom Tab Bar */}
             <div className="fixed bottom-0 left-0 right-0 h-16 bg-slate-900/90 backdrop-blur-lg border-t border-slate-800 z-50 flex md:hidden items-center justify-around px-2">
-                {navLinks.map(link => {
+                {[
+                    ...navLinks,
+                    { href: `/profile/${user.uid}`, label: 'Profile', icon: User }
+                ].map(link => {
                     const Icon = link.icon
                     const active = pathname === link.href
                     return (

@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
-    User, Github, Linkedin, Code2, Award, GraduationCap, ArrowLeft
+    User, Github, Linkedin, Code2, Award, GraduationCap, ArrowLeft, Mail
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -60,7 +60,18 @@ export default async function ProfileViewPage({ params }: { params: Promise<{ id
                     <h1 className="text-2xl font-bold text-white">
                         {profile.display_name || profile.email.split('@')[0]}
                     </h1>
-                    <p className="text-slate-400 text-sm mb-3">{profile.email}</p>
+                    <div className="space-y-1 mb-4">
+                        <p className="text-slate-400 text-sm flex items-center gap-2">
+                            <Mail className="w-4 h-4" />
+                            {profile.email} (Student)
+                        </p>
+                        {profile.professional_email && (
+                            <p className="text-blue-400 text-sm flex items-center gap-2">
+                                <Mail className="w-4 h-4" />
+                                {profile.professional_email} (Professional)
+                            </p>
+                        )}
+                    </div>
 
                     {(profile.branch || profile.year_of_study) && (
                         <div className="flex items-center gap-2 mb-3">

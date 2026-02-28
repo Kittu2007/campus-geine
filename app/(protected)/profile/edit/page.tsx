@@ -27,6 +27,7 @@ export default function EditProfilePage() {
         linkedin_url: '',
         leetcode_url: '',
         hackerrank_url: '',
+        professional_email: '',
     })
 
     useEffect(() => {
@@ -53,6 +54,7 @@ export default function EditProfilePage() {
                 linkedin_url: data.linkedin_url || '',
                 leetcode_url: data.leetcode_url || '',
                 hackerrank_url: data.hackerrank_url || '',
+                professional_email: data.professional_email || '',
             })
         }
         setLoading(false)
@@ -77,6 +79,7 @@ export default function EditProfilePage() {
                     linkedin_url: form.linkedin_url || null,
                     leetcode_url: form.leetcode_url || null,
                     hackerrank_url: form.hackerrank_url || null,
+                    professional_email: form.professional_email || null,
                 })
                 .eq('id', firebaseUser.uid)
 
@@ -112,6 +115,17 @@ export default function EditProfilePage() {
                                 value={form.display_name}
                                 onChange={e => setForm({ ...form, display_name: e.target.value })}
                                 placeholder="Your full name"
+                                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-slate-300">Professional Email</Label>
+                            <Input
+                                value={form.professional_email}
+                                onChange={e => setForm({ ...form, professional_email: e.target.value })}
+                                placeholder="name@company.com"
+                                type="email"
                                 className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
                             />
                         </div>
