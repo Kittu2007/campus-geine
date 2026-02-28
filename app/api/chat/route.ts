@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import campusInfo from '@/lib/university-context.json'
 
-// Aggressively strip ALL whitespace/newline characters that may be injected by deployment tools
-const rawKey = process.env.GEMINI_API_KEY || ''
-const cleanKey = rawKey.replace(/\s/g, '')
-const genAI = new GoogleGenerativeAI(cleanKey)
+// OpenRouter API key — strip all whitespace to be safe
+const openRouterKey = (process.env.OPENROUTER_API_KEY || '').replace(/\s/g, '')
 
 // Supabase client for FAQ queries
 const supabase = createClient(
@@ -32,8 +29,7 @@ function checkRateLimit(userId: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
-    // Diagnostic log — visible in Vercel function logs
-    console.log('[chat] cleanKey length:', cleanKey.length, '| model: gemini-1.5-flash')
+    console.log('[chat] OpenRouter key length:', openRouterKey.length, '| model: mistralai/mistral-7b-instruct:free')
 
     try {
         // Auth check via Bearer token
@@ -57,7 +53,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, message: '', error: 'Message is required' }, { status: 400 })
         }
 
-        if (!cleanKey) {
+        if (!openRouterKey) {
             return NextResponse.json({ success: false, message: '', error: 'AI service not configured' }, { status: 503 })
         }
 
@@ -109,78 +105,77 @@ ${contextText}
 
 Always be friendly, helpful, and concise. Always end with: "Is there anything else I can help you with?"`
 
-        // Build conversation history as a full prompt
-        const historyText = (history as { role: string; content: string }[])
-            .slice(-6)
-            .map(h => `${h.role === 'assistant' ? 'Assistant' : 'User'}: ${h.content}`)
-            .join('\n')
+        // Build messages array for OpenRouter (OpenAI-compatible format)
+        const chatMessages = [
+            { role: 'system', content: systemPrompt },
+            ...(history as { role: string; content: string }[]).slice(-6).map(h => ({
+                role: h.role === 'assistant' ? 'assistant' : 'user',
+                content: h.content,
+            })),
+            { role: 'user', content: message },
+        ]
 
-        const fullPrompt = historyText
-            ? `${historyText}\nUser: ${message}\nAssistant:`
-            : message
+        // Call OpenRouter with a 25-second timeout
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 25000)
 
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash',
-            systemInstruction: systemPrompt,
-            generationConfig: {
-                maxOutputTokens: 800,
-            }
-        })
+        let res: Response
+        try {
+            res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${openRouterKey}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': 'https://campus-genie-eight.vercel.app',
+                    'X-Title': 'Campus Buddy - Anurag University',
+                },
+                body: JSON.stringify({
+                    model: 'mistralai/mistral-7b-instruct:free',
+                    messages: chatMessages,
+                    max_tokens: 800,
+                    temperature: 0.7,
+                }),
+                signal: controller.signal,
+            })
+        } finally {
+            clearTimeout(timeoutId)
+        }
 
-        // Safe Gemini extraction with timeout
-        const timeoutMs = 25000
-        const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Request timed out after 25 seconds')), timeoutMs)
-        )
+        if (!res.ok) {
+            const errBody = await res.text()
+            console.error('[chat] OpenRouter HTTP error:', res.status, errBody)
+            throw new Error(`OpenRouter returned ${res.status}: ${errBody}`)
+        }
 
-        const result = await Promise.race([
-            model.generateContent(fullPrompt),
-            timeoutPromise
-        ])
-
-        const response = await result.response
-
-        console.log('Gemini raw response candidates count:', response?.candidates?.length)
+        const data = await res.json()
+        console.log('[chat] OpenRouter response id:', data?.id, '| choices:', data?.choices?.length)
 
         const text =
-            response?.candidates?.[0]?.content?.parts
-                ?.map((p: { text?: string }) => p.text)
-                ?.filter(Boolean)
-                ?.join(' ') || 'No response generated. Please try again.'
+            data?.choices?.[0]?.message?.content?.trim() ||
+            'No response generated. Please try again.'
 
         const sources = contextChunks.map(c => ({ question: c.question, category: c.category }))
 
         return new Response(
-            JSON.stringify({
-                success: true,
-                message: text,
-                sources,
-            }),
-            {
-                headers: { 'Content-Type': 'application/json' }
-            }
+            JSON.stringify({ success: true, message: text, sources }),
+            { headers: { 'Content-Type': 'application/json' } }
         )
+
     } catch (error: any) {
-        console.error('Gemini Error:', error)
+        console.error('[chat] Error:', error?.message || error)
 
         const friendlyMessage =
-            error?.status === 403
-                ? 'The AI service key is invalid or expired. Please contact the administrator.'
-                : error?.status === 429
-                    ? 'AI service rate limit reached. Please try again in a moment.'
-                    : error?.message?.includes('timed out')
-                        ? 'The AI took too long to respond. Please try again.'
+            error?.message?.includes('abort') || error?.message?.includes('timed out')
+                ? 'The AI took too long to respond. Please try again.'
+                : error?.message?.includes('401') || error?.message?.includes('403')
+                    ? 'AI service authentication failed. Please contact the administrator.'
+                    : error?.message?.includes('429')
+                        ? 'AI service rate limit reached. Please try again in a moment.'
                         : 'Something went wrong. Please try again.'
 
         return new Response(
-            JSON.stringify({
-                success: false,
-                message: '',
-                error: friendlyMessage
-            }),
-            {
-                headers: { 'Content-Type': 'application/json' }
-            }
+            JSON.stringify({ success: false, message: '', error: friendlyMessage }),
+            { headers: { 'Content-Type': 'application/json' } }
         )
     }
 }
