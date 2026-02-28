@@ -1,120 +1,61 @@
-import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
-import {
-    MessageCircle,
-    AlertTriangle,
-    BookOpen,
-    Users,
-    User,
-    ArrowRight,
-    TrendingUp,
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+'use client'
 
-const quickLinks = [
-    {
-        href: '/chat',
-        icon: MessageCircle,
-        title: 'Campus Buddy AI',
-        description: 'Ask any campus question',
-        color: 'from-blue-500 to-cyan-500',
-        bgHover: 'hover:border-blue-500/30',
-    },
-    {
-        href: '/complaints',
-        icon: AlertTriangle,
-        title: 'Report Issue',
-        description: 'Submit a complaint',
-        color: 'from-amber-500 to-orange-500',
-        bgHover: 'hover:border-amber-500/30',
-    },
-    {
-        href: '/resources',
-        icon: BookOpen,
-        title: 'Resources',
-        description: 'Browse study materials',
-        color: 'from-emerald-500 to-teal-500',
-        bgHover: 'hover:border-emerald-500/30',
-    },
-    {
-        href: '/teams',
-        icon: Users,
-        title: 'Find Teams',
-        description: 'Join a hackathon team',
-        color: 'from-purple-500 to-pink-500',
-        bgHover: 'hover:border-purple-500/30',
-    },
-    {
-        href: '/profile/edit',
-        icon: User,
-        title: 'My Profile',
-        description: 'Update your profile',
-        color: 'from-indigo-500 to-blue-500',
-        bgHover: 'hover:border-indigo-500/30',
-    },
+import { useAuth } from '@/lib/firebase/AuthContext'
+import Link from 'next/link'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+    MessageSquare, AlertTriangle, BookOpen, Users, User, Sparkles,
+} from 'lucide-react'
+
+const modules = [
+    { href: '/chat', label: 'Campus Buddy AI', desc: 'Ask questions about campus', icon: MessageSquare, color: 'from-blue-500 to-indigo-600', iconBg: 'bg-blue-500/20' },
+    { href: '/complaints', label: 'Complaints', desc: 'Report infrastructure issues', icon: AlertTriangle, color: 'from-amber-500 to-orange-600', iconBg: 'bg-amber-500/20' },
+    { href: '/resources', label: 'Resources Hub', desc: 'Browse study materials', icon: BookOpen, color: 'from-emerald-500 to-teal-600', iconBg: 'bg-emerald-500/20' },
+    { href: '/teams', label: 'Hackathon Teams', desc: 'Find teammates', icon: Users, color: 'from-purple-500 to-pink-600', iconBg: 'bg-purple-500/20' },
+    { href: '/profile/edit', label: 'My Profile', desc: 'Edit your profile', icon: User, color: 'from-cyan-500 to-blue-600', iconBg: 'bg-cyan-500/20' },
 ]
 
-export default async function DashboardPage() {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('display_name, email')
-        .eq('id', user?.id || '')
-        .single()
+export default function DashboardPage() {
+    const { user } = useAuth()
 
-    const firstName = profile?.display_name?.split(' ')[0] || profile?.email?.split('@')[0] || 'Student'
+    const greeting = (() => {
+        const hour = new Date().getHours()
+        if (hour < 12) return 'Good Morning'
+        if (hour < 17) return 'Good Afternoon'
+        return 'Good Evening'
+    })()
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
-            {/* Greeting */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white mb-2">
-                    Welcome back, <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">{firstName}</span> 👋
+                <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="w-5 h-5 text-blue-400" />
+                    <span className="text-sm text-blue-400 font-medium">{greeting}</span>
+                </div>
+                <h1 className="text-3xl font-bold text-white">
+                    Welcome, {user?.email?.split('@')[0] || 'Student'} 👋
                 </h1>
-                <p className="text-slate-400">
-                    Here&apos;s your Campus OS dashboard. Jump into any module to get started.
-                </p>
+                <p className="text-slate-400 mt-1">What would you like to do today?</p>
             </div>
 
-            {/* Quick Links */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                {quickLinks.map((link) => {
-                    const Icon = link.icon
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {modules.map(mod => {
+                    const Icon = mod.icon
                     return (
-                        <Link key={link.href} href={link.href}>
-                            <Card className={`bg-slate-800/50 border-slate-700/50 ${link.bgHover} transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer h-full`}>
-                                <CardContent className="flex items-center gap-4 p-5">
-                                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${link.color} flex items-center justify-center shrink-0`}>
+                        <Link key={mod.href} href={mod.href}>
+                            <Card className="h-full bg-slate-800/50 border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group">
+                                <CardContent className="p-6">
+                                    <div className={`w-12 h-12 rounded-xl ${mod.iconBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                                         <Icon className="w-6 h-6 text-white" />
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-semibold text-white">{link.title}</h3>
-                                        <p className="text-sm text-slate-400">{link.description}</p>
-                                    </div>
-                                    <ArrowRight className="w-4 h-4 text-slate-500 shrink-0" />
+                                    <h3 className="font-semibold text-white text-lg mb-1">{mod.label}</h3>
+                                    <p className="text-sm text-slate-400">{mod.desc}</p>
                                 </CardContent>
                             </Card>
                         </Link>
                     )
                 })}
             </div>
-
-            {/* Stats preview */}
-            <Card className="bg-slate-800/30 border-slate-700/50">
-                <CardHeader>
-                    <CardTitle className="text-lg text-white flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-blue-400" />
-                        Platform Overview
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-slate-400 text-sm">
-                        Campus OS is your unified platform for everything campus-related.
-                        Start by exploring the modules above or chatting with Campus Buddy AI for instant answers.
-                    </p>
-                </CardContent>
-            </Card>
         </div>
     )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '@/lib/firebase/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,7 @@ import { toast } from 'sonner'
 import { Loader2, Save, Github, Linkedin, Code2, Award } from 'lucide-react'
 
 export default function EditProfilePage() {
+    const { user: firebaseUser } = useAuth()
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -28,18 +30,17 @@ export default function EditProfilePage() {
     })
 
     useEffect(() => {
-        loadProfile()
-    }, [])
+        if (firebaseUser) loadProfile()
+    }, [firebaseUser])
 
     const loadProfile = async () => {
+        if (!firebaseUser) return
         const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
 
         const { data } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', user.id)
+            .eq('id', firebaseUser.uid)
             .single()
 
         if (data) {
@@ -63,8 +64,7 @@ export default function EditProfilePage() {
 
         try {
             const supabase = createClient()
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
+            if (!firebaseUser) throw new Error('Not authenticated')
 
             const { error } = await supabase
                 .from('profiles')
@@ -78,11 +78,11 @@ export default function EditProfilePage() {
                     leetcode_url: form.leetcode_url || null,
                     hackerrank_url: form.hackerrank_url || null,
                 })
-                .eq('id', user.id)
+                .eq('id', firebaseUser.uid)
 
             if (error) throw error
             toast.success('Profile updated!')
-            router.push(`/profile/${user.id}`)
+            router.push(`/profile/${firebaseUser.uid}`)
         } catch {
             toast.error('Failed to update profile')
         } finally {

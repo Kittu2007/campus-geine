@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAuth } from '@/lib/firebase/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ const categories = [
 ]
 
 export default function NewComplaintPage() {
+    const { user: firebaseUser } = useAuth()
     const router = useRouter()
     const [category, setCategory] = useState('')
     const [roomNo, setRoomNo] = useState('')
@@ -53,15 +55,14 @@ export default function NewComplaintPage() {
 
         try {
             const supabase = createClient()
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
+            if (!firebaseUser) throw new Error('Not authenticated')
 
             let image_url = null
 
             // Upload image if provided
             if (imageFile) {
                 const ext = imageFile.name.split('.').pop()
-                const fileName = `${user.id}/${Date.now()}.${ext}`
+                const fileName = `${firebaseUser.uid}/${Date.now()}.${ext}`
                 const { error: uploadError } = await supabase.storage
                     .from('complaint-images')
                     .upload(fileName, imageFile)
@@ -75,7 +76,7 @@ export default function NewComplaintPage() {
             }
 
             const { error } = await supabase.from('complaints').insert({
-                user_id: user.id,
+                user_id: firebaseUser.uid,
                 category,
                 room_no: roomNo,
                 description,

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAuth } from '@/lib/firebase/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ const skillSuggestions = [
 ]
 
 export default function NewTeamPage() {
+    const { user: firebaseUser } = useAuth()
     const router = useRouter()
     const [hackathonName, setHackathonName] = useState('')
     const [eventUrl, setEventUrl] = useState('')
@@ -52,11 +54,10 @@ export default function NewTeamPage() {
         setLoading(true)
         try {
             const supabase = createClient()
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
+            if (!firebaseUser) throw new Error('Not authenticated')
 
             const { error } = await supabase.from('hackathon_teams').insert({
-                creator_id: user.id,
+                creator_id: firebaseUser.uid,
                 hackathon_name: hackathonName,
                 event_url: eventUrl || null,
                 event_date: eventDate || null,

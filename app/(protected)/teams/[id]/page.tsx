@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '@/lib/firebase/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -38,15 +39,17 @@ interface TeamRequest {
 }
 
 export default function TeamDetailPage() {
+    const { user: firebaseUser } = useAuth()
     const params = useParams()
     const teamId = params.id as string
     const [team, setTeam] = useState<Team | null>(null)
     const [requests, setRequests] = useState<TeamRequest[]>([])
     const [loading, setLoading] = useState(true)
-    const [userId, setUserId] = useState<string | null>(null)
     const [message, setMessage] = useState('')
     const [sending, setSending] = useState(false)
     const [hasRequested, setHasRequested] = useState(false)
+
+    const userId = firebaseUser?.uid || null
 
     useEffect(() => {
         fetchTeam()
@@ -54,8 +57,6 @@ export default function TeamDetailPage() {
 
     const fetchTeam = async () => {
         const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        setUserId(user?.id || null)
 
         const { data: teamData } = await supabase
             .from('hackathon_teams')
@@ -66,19 +67,19 @@ export default function TeamDetailPage() {
         setTeam(teamData)
 
         // Check if user already requested
-        if (user) {
+        if (firebaseUser) {
             const { data: existingReq } = await supabase
                 .from('team_requests')
                 .select('id')
                 .eq('team_id', teamId)
-                .eq('requester_id', user.id)
+                .eq('requester_id', firebaseUser.uid)
                 .limit(1)
 
             setHasRequested((existingReq || []).length > 0)
         }
 
         // Load requests if creator
-        if (teamData && user && teamData.creator_id === user.id) {
+        if (teamData && firebaseUser && teamData.creator_id === firebaseUser.uid) {
             const { data: reqData } = await supabase
                 .from('team_requests')
                 .select('*, profiles:requester_id(display_name, email)')

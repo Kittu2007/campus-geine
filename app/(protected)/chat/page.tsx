@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/lib/firebase/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
@@ -25,6 +25,7 @@ interface Message {
 }
 
 export default function ChatPage() {
+    const { user } = useAuth()
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
@@ -44,14 +45,13 @@ export default function ChatPage() {
         setLoading(true)
 
         try {
-            const supabase = createClient()
-            const { data: { session } } = await supabase.auth.getSession()
+            const token = await user?.getIdToken()
 
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session?.access_token}`,
+                    'Authorization': `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     message: userMessage,
@@ -180,8 +180,8 @@ export default function ChatPage() {
                         )}
                         <div className={`max-w-[80%] ${msg.role === 'user' ? 'order-first' : ''}`}>
                             <Card className={`p-3 ${msg.role === 'user'
-                                    ? 'bg-blue-600 border-blue-500 text-white'
-                                    : 'bg-slate-800/80 border-slate-700/50 text-slate-200'
+                                ? 'bg-blue-600 border-blue-500 text-white'
+                                : 'bg-slate-800/80 border-slate-700/50 text-slate-200'
                                 }`}>
                                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                                 {msg.content === '' && loading && (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '@/lib/firebase/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,7 @@ const subjects = [
 ]
 
 export default function AdminResourcesPage() {
+    const { user: firebaseUser } = useAuth()
     const [resources, setResources] = useState<Resource[]>([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -59,14 +61,13 @@ export default function AdminResourcesPage() {
         setSaving(true)
         try {
             const supabase = createClient()
-            const { data: { user } } = await supabase.auth.getUser()
             const { error } = await supabase.from('resources').insert({
                 title: form.title,
                 subject: form.subject,
                 type: form.type,
                 url: form.url,
                 description: form.description || null,
-                uploaded_by: user?.id,
+                uploaded_by: firebaseUser?.uid,
             })
             if (error) throw error
             toast.success('Resource added!')

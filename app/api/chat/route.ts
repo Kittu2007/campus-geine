@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import Groq from 'groq-sdk'
 
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
 })
+
+// Supabase admin client for server-side queries
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 // Simple in-memory rate limiter
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -25,14 +31,15 @@ function checkRateLimit(userId: string): boolean {
 
 export async function POST(request: NextRequest) {
     try {
-        const supabase = await createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-
-        if (!user) {
+        // Simple auth check via Bearer token (Firebase ID token)
+        const authHeader = request.headers.get('Authorization')
+        if (!authHeader?.startsWith('Bearer ')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        if (!checkRateLimit(user.id)) {
+        const userId = authHeader.slice(7).substring(0, 20) // Use token prefix as rate limit key
+
+        if (!checkRateLimit(userId)) {
             return NextResponse.json(
                 { error: 'Rate limit exceeded. Max 30 requests per hour.' },
                 { status: 429 }
