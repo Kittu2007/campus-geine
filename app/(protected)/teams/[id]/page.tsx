@@ -201,7 +201,7 @@ export default function TeamDetailPage() {
             </Card>
 
             {/* Join Request Form */}
-            {!isCreator && !hasRequested && team.status === 'open' && (
+            {userId && !isCreator && !hasRequested && team.status === 'open' && (
                 <Card className="bg-slate-800/50 border-slate-700/50 mb-6">
                     <CardHeader>
                         <CardTitle className="text-lg text-white">Send Join Request</CardTitle>
