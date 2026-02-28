@@ -64,10 +64,12 @@ export default function NewTeamPage() {
                 required_skills: skills.length > 0 ? skills : null,
                 team_size_needed: parseInt(teamSize),
                 description,
+                status: 'open',
             })
 
             if (error) throw error
             toast.success('Team listing created!')
+            router.refresh() // Invalidate router cache so the listing updates
             router.push('/teams')
         } catch (err) {
             toast.error('Failed to create team listing')
