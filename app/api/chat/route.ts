@@ -3,7 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import campusInfo from '@/lib/university-context.json'
 
-const genAI = new GoogleGenerativeAI((process.env.GEMINI_API_KEY || '').trim())
+// Aggressively strip ALL whitespace/newline characters that may be injected by deployment tools
+const rawKey = process.env.GEMINI_API_KEY || ''
+const cleanKey = rawKey.replace(/\s/g, '')
+const genAI = new GoogleGenerativeAI(cleanKey)
 
 // Supabase client for FAQ queries
 const supabase = createClient(
@@ -51,7 +54,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 })
         }
 
-        if (!process.env.GEMINI_API_KEY) {
+        if (!cleanKey) {
             return NextResponse.json({ error: 'AI service not configured' }, { status: 503 })
         }
 
@@ -165,9 +168,25 @@ Always be friendly, helpful, and concise. Always end with: "Is there anything el
         })
     } catch (error: any) {
         console.error('Chat API error details:', error?.message || error)
-        return NextResponse.json(
-            { error: 'Internal server error', details: error?.message },
-            { status: 500 }
-        )
+        // Return a streaming-compatible error so the client always handles it gracefully
+        const encoder = new TextEncoder()
+        const errorStream = new ReadableStream({
+            start(controller) {
+                const errMsg = error?.status === 403
+                    ? 'The AI service key is invalid or expired. Please contact the administrator.'
+                    : error?.status === 429
+                        ? 'AI service rate limit reached. Please try again in a moment.'
+                        : 'An unexpected error occurred. Please try again.'
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'token', content: errMsg })}\n\n`))
+                controller.close()
+            }
+        })
+        return new Response(errorStream, {
+            headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+            }
+        })
     }
 }
