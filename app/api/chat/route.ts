@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import campusInfo from '@/lib/university-context.json'
 
 const genAI = new GoogleGenerativeAI((process.env.GEMINI_API_KEY || '').trim())
 
@@ -90,7 +91,10 @@ Answer ONLY based on the context below. If the answer is not in the context,
 say: "I don't have that information yet. Please contact the student affairs office at the admin block."
 Do not hallucinate. Do not make up contact numbers or dates.
 
-CONTEXT:
+UNIVERSITY DATA / RULES:
+${JSON.stringify(campusInfo, null, 2)}
+
+FAQ CONTEXT:
 ${contextText}
 
 Always be friendly and helpful. Always end with: "Is there anything else I can help you with?"`

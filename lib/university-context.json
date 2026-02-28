@@ -1,0 +1,235 @@
+{
+  "chatbot_config": {
+    "name": "Anurag University Student Support Bot",
+    "version": "1.0",
+    "fallback_message": "I'm sorry, I didn't understand that.\n\nYou can ask about Admissions, Courses, Fees, Placements, Results, Scholarships, Hostel, or Campus Facilities.\n\nVisit: https://www.anurag.edu.in/"
+  },
+  "university": {
+    "name": "Anurag University",
+    "established": "2020",
+    "type": "Private Multidisciplinary University",
+    "recognition": ["UGC Recognized", "NBA Accredited"],
+    "location": {
+      "address": "Venkatapur, Ghatkesar",
+      "district": "Medchal–Malkajgiri",
+      "city": "Hyderabad",
+      "state": "Telangana",
+      "country": "India",
+      "pincode": "500088"
+    },
+    "website": "https://www.anurag.edu.in/",
+    "admissions_portal": "https://admissions.anurag.edu.in/",
+    "results_portal": "https://anurag.edu.in/results/",
+    "placement_page": "https://anurag.edu.in/placement-notifications/",
+    "contact": {
+      "phone": "+91-8181057057",
+      "email": "admissionsic@anurag.edu.in",
+      "placement_email": "placements@anurag.edu.in"
+    }
+  },
+  "vision_mission": {
+    "vision": "To be a globally recognized university producing skilled professionals and innovators.",
+    "mission": [
+      "Provide industry-focused education",
+      "Encourage research and innovation",
+      "Promote ethical values and leadership",
+      "Enhance global competitiveness"
+    ]
+  },
+  "schools": [
+    "School of Engineering",
+    "School of Management",
+    "School of Pharmacy",
+    "School of Agriculture",
+    "School of Medical Sciences",
+    "School of Nursing",
+    "International College"
+  ],
+  "program_levels": [
+    "Undergraduate (UG)",
+    "Postgraduate (PG)",
+    "Doctoral (Ph.D)"
+  ],
+  "programs": {
+    "engineering": {
+      "ug": [
+        "B.Tech - CSE",
+        "B.Tech - AI & ML",
+        "B.Tech - IT",
+        "B.Tech - ECE",
+        "B.Tech - EEE",
+        "B.Tech - Mechanical",
+        "B.Tech - Civil",
+        "B.Tech - Data Science"
+      ],
+      "pg": [
+        "M.Tech - Cyber Security",
+        "M.Tech - AI & Data Science",
+        "M.Tech - Power Electronics",
+        "M.Tech - Robotics"
+      ],
+      "phd": "Ph.D in Engineering"
+    },
+    "management": {
+      "ug": ["BBA"],
+      "pg": ["MBA"],
+      "phd": "Ph.D in Management"
+    },
+    "pharmacy": {
+      "programs": ["B.Pharm", "M.Pharm", "Pharm.D", "Ph.D"]
+    },
+    "agriculture": {
+      "ug": ["B.Sc (Hons) Agriculture"]
+    },
+    "medical_sciences": {
+      "programs": ["MBBS and Allied Health Sciences"]
+    },
+    "nursing": {
+      "programs": ["B.Sc Nursing"]
+    }
+  },
+  "admissions": {
+    "process": [
+      "Register via admissions portal",
+      "Submit entrance exam scores",
+      "Attend counseling",
+      "Document verification",
+      "Fee payment and confirmation"
+    ],
+    "accepted_exams": [
+      "AnuragCET",
+      "EAPCET",
+      "JEE Main",
+      "TS ICET (MBA)"
+    ]
+  },
+  "fee_structure": {
+    "btech": {
+      "tuition_per_year": "₹2,85,000 approx",
+      "total_4_years": "₹11,40,000 approx"
+    },
+    "mba_total": "₹3,24,000 - ₹4,24,000",
+    "bba_per_year": "₹1,50,000 approx",
+    "hostel_per_year": "₹90,000 - ₹1,20,000 approx",
+    "note": "Fees vary by branch and admission category. Always verify via official website."
+  },
+  "scholarships": {
+    "merit_anurag_cet": [
+      { "rank": "1-10", "waiver": "100% tuition" },
+      { "rank": "11-25", "waiver": "50% tuition" },
+      { "rank": "26-100", "waiver": "25% tuition" }
+    ],
+    "other": [
+      "EWS / Need Based",
+      "Category Based (SC/ST/BC/EBC/Minority)",
+      "Sports Based"
+    ],
+    "conditions": [
+      "Maintain CGPA 8.0+",
+      "No backlogs"
+    ]
+  },
+  "placements": {
+    "highest_package": "32-38 LPA (recent high offers)",
+    "average_package": "Approx 4-6 LPA",
+    "recruiters": "100+",
+    "internships": "300+",
+    "training_support": [
+      "Mock interviews",
+      "Resume building",
+      "Soft skills training",
+      "Technical training"
+    ]
+  },
+  "campus_facilities": {
+    "infrastructure": [
+      "Smart classrooms",
+      "Advanced laboratories",
+      "Central library",
+      "Auditorium",
+      "Digital learning systems"
+    ],
+    "hostel": [
+      "Separate boys & girls hostels",
+      "Wi-Fi",
+      "Mess facilities",
+      "24/7 security"
+    ],
+    "sports": [
+      "Cricket ground",
+      "Football field",
+      "Basketball court",
+      "Gym",
+      "Indoor games"
+    ],
+    "medical": [
+      "On-campus medical center",
+      "Counseling services"
+    ],
+    "transport": [
+      "Bus services across Hyderabad"
+    ]
+  },
+  "clubs_and_activities": [
+    "Coding Club",
+    "Robotics Club",
+    "Innovation Cell",
+    "Dance Club",
+    "Music Club",
+    "Drama Club",
+    "NSS",
+    "NCC"
+  ],
+  "academic_calendar": {
+    "includes": [
+      "Semester schedules",
+      "Internal exams",
+      "End semester exams",
+      "Holidays",
+      "Workshops and events"
+    ],
+    "official_page": "https://anurag.edu.in/academic-calendar/"
+  },
+  "intents": [
+    {
+      "name": "Welcome",
+      "training_phrases": ["Hi", "Hello", "Hey", "Good morning", "Good evening"],
+      "response": "Welcome to Anurag University Student Support 🤝\nHow can I help you today?\n\nAsk about Admissions, Courses, Fees, Placements, Results, Scholarships or Hostel."
+    },
+    {
+      "name": "Location",
+      "training_phrases": ["University address", "Where is campus?", "Location"],
+      "response": "Anurag University is located at Venkatapur, Ghatkesar, Hyderabad, Telangana – 500088."
+    },
+    {
+      "name": "Courses",
+      "training_phrases": ["Available programs", "Engineering branches", "UG PG courses"],
+      "response": "Anurag University offers UG, PG and Ph.D programs in Engineering, Management, Pharmacy, Agriculture, Nursing and Medical Sciences."
+    },
+    {
+      "name": "Admissions",
+      "training_phrases": ["How to apply?", "Admission process", "Apply for B.Tech"],
+      "response": "Apply via admissions portal: https://admissions.anurag.edu.in/\nAdmissions based on AnuragCET, EAPCET, JEE or TS ICET depending on course."
+    },
+    {
+      "name": "Fees",
+      "training_phrases": ["B.Tech fees", "MBA fees", "Fee structure"],
+      "response": "B.Tech approx ₹2.85L per year.\nHostel ₹90K–₹1.2L per year.\nExact fees vary by branch and category. Check official website."
+    },
+    {
+      "name": "Placements",
+      "training_phrases": ["Placement details", "Average package", "Top recruiters"],
+      "response": "Highest offers up to 32–38 LPA.\nAverage approx 4–6 LPA.\n100+ recruiters with dedicated training & placement cell."
+    },
+    {
+      "name": "Results",
+      "training_phrases": ["Check results", "Semester results"],
+      "response": "Results are available at: https://anurag.edu.in/results/"
+    },
+    {
+      "name": "Hostel",
+      "training_phrases": ["Hostel available?", "Accommodation details"],
+      "response": "Separate boys and girls hostels with Wi-Fi, mess and security.\nFees approx ₹90K–₹1.2L per year."
+    }
+  ]
+}
