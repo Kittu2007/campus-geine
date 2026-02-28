@@ -32,6 +32,9 @@ function checkRateLimit(userId: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
+    // Diagnostic log — visible in Vercel function logs
+    console.log('[chat] cleanKey length:', cleanKey.length, '| model: gemini-1.5-flash')
+
     try {
         // Auth check via Bearer token
         const authHeader = request.headers.get('Authorization')
@@ -117,7 +120,7 @@ Always be friendly, helpful, and concise. Always end with: "Is there anything el
             : message
 
         const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             systemInstruction: systemPrompt,
             generationConfig: {
                 maxOutputTokens: 800,

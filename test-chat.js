@@ -3,39 +3,33 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const campusInfo = require('./lib/university-context.json');
 
 async function testChat() {
+    const rawKey = process.env.GEMINI_API_KEY || '';
+    const cleanKey = rawKey.replace(/\s/g, '');
+    console.log("Key present:", !!cleanKey, "Key length:", cleanKey.length);
+
     try {
-        console.log("Testing Gemini Chat with system prompt...");
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-        const systemPrompt = `You are Campus Buddy, the official AI assistant for Anurag University.
-Use the UNIVERSITY DATA below to answer student questions accurately.
-
-UNIVERSITY DATA:
-${JSON.stringify(campusInfo, null, 2)}
-
-Always be friendly and helpful.`;
-
-        console.log("System prompt length:", systemPrompt.length, "chars");
-
+        const genAI = new GoogleGenerativeAI(cleanKey);
         const model = genAI.getGenerativeModel({
             model: 'gemini-2.5-flash',
-            systemInstruction: systemPrompt
+            systemInstruction: 'You are Campus Buddy for Anurag University.',
+            generationConfig: { maxOutputTokens: 800 }
         });
 
-        const chat = model.startChat({ history: [] });
-        const result = await chat.sendMessageStream("who are u");
+        const result = await model.generateContent("What are the library timings?");
+        const response = await result.response;
 
-        let fullText = '';
-        for await (const chunk of result.stream) {
-            fullText += chunk.text();
-            process.stdout.write(chunk.text());
-        }
-        console.log("\n\nSuccess! Response length:", fullText.length);
+        const text =
+            response?.candidates?.[0]?.content?.parts
+                ?.map(p => p.text)
+                ?.filter(Boolean)
+                ?.join(' ') || 'No response generated.';
+
+        console.log("SUCCESS! Response:", text.substring(0, 200));
+        return JSON.stringify({ success: true, message: text });
     } catch (e) {
-        console.error("\n\nDetailed Error:", JSON.stringify(e, null, 2));
-        console.error("Error message:", e?.message);
-        console.error("Error status:", e?.status);
+        console.error("ERROR:", e?.message, "Status:", e?.status);
+        return JSON.stringify({ success: false, error: e?.message });
     }
 }
 
-testChat();
+testChat().then(r => console.log("\nFull JSON response:\n", r));
