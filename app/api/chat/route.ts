@@ -1,181 +1,152 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import campusInfo from '@/lib/university-context.json'
 
-// OpenRouter API key — strip all whitespace to be safe
-const openRouterKey = (process.env.OPENROUTER_API_KEY || '').replace(/\s/g, '')
-
-// Supabase client for FAQ queries
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
-// Simple in-memory rate limiter
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(userId: string): boolean {
-    const now = Date.now()
-    const entry = rateLimitMap.get(userId)
-
-    if (!entry || now > entry.resetAt) {
-        rateLimitMap.set(userId, { count: 1, resetAt: now + 3600000 })
-        return true
-    }
-
-    if (entry.count >= 30) return false
-    entry.count++
-    return true
-}
+// Ensure we don't cache this route
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-    console.log('[chat] OpenRouter key length:', openRouterKey.length, '| model: meta-llama/llama-3.3-70b-instruct:free')
+    console.log('[chat] --- NEW REQUEST INITIATED ---')
+
+    // 1. Environment Variable Validation
+    const rawKey = process.env.GEMINI_API_KEY
+    if (!rawKey) {
+        console.error('[chat-error] GEMINI_API_KEY is missing or undefined.')
+        return NextResponse.json(
+            { success: false, message: '', error: 'AI service configuration error. Please contact support.' },
+            { status: 500 }
+        )
+    }
+
+    // Clean key of any stray whitespace/newlines from CLI injections
+    const geminiKey = rawKey.replace(/\s/g, '')
 
     try {
-        // Auth check via Bearer token
-        const authHeader = request.headers.get('Authorization')
-        if (!authHeader?.startsWith('Bearer ')) {
-            return NextResponse.json({ success: false, message: '', error: 'Unauthorized' }, { status: 401 })
-        }
+        // 2. Body Validation
+        const body = await request.json()
+        const { message, history } = body
 
-        const userId = authHeader.slice(7).substring(0, 20)
-
-        if (!checkRateLimit(userId)) {
+        if (!message || typeof message !== 'string') {
+            console.error('[chat-error] Invalid or missing prompt in request body.')
             return NextResponse.json(
-                { success: false, message: '', error: 'Rate limit exceeded. Max 30 requests per hour.' },
-                { status: 429 }
+                { success: false, message: '', error: 'Valid message prompt is required.' },
+                { status: 400 }
             )
         }
 
-        const { message, history = [] } = await request.json()
+        console.log(`[chat] User prompt received: "${message.substring(0, 50)}..."`)
 
-        if (!message || typeof message !== 'string') {
-            return NextResponse.json({ success: false, message: '', error: 'Message is required' }, { status: 400 })
-        }
-
-        if (!openRouterKey) {
-            return NextResponse.json({ success: false, message: '', error: 'AI service not configured' }, { status: 503 })
-        }
-
-        // RAG: Try to find relevant FAQs
-        let contextChunks: { question: string; answer: string; category: string }[] = []
-
-        try {
-            const { data: faqs } = await supabase
-                .from('faqs')
-                .select('question, answer, category')
-                .limit(50)
-
-            if (faqs && faqs.length > 0) {
-                const queryWords = message.toLowerCase().split(/\s+/)
-                const scored = faqs.map(faq => {
-                    const faqText = `${faq.question} ${faq.answer}`.toLowerCase()
-                    const score = queryWords.filter((w: string) => w.length > 2 && faqText.includes(w)).length
-                    return { ...faq, score }
-                })
-                scored.sort((a, b) => b.score - a.score)
-                contextChunks = scored.slice(0, 5).filter((f: { score: number }) => f.score > 0)
-
-                if (contextChunks.length === 0) {
-                    contextChunks = faqs.slice(0, 5)
-                }
+        // 3. Initialize Gemini
+        const genAI = new GoogleGenerativeAI(geminiKey)
+        const model = genAI.getGenerativeModel({
+            model: 'gemini-2.5-flash', // Using latest stable fast model
+            generationConfig: {
+                maxOutputTokens: 800,
+                temperature: 0.7,
             }
-        } catch {
-            // Continue without FAQ context
-        }
+        })
 
-        const contextText = contextChunks.length > 0
-            ? contextChunks.map(c => `Q: ${c.question}\nA: ${c.answer}`).join('\n\n')
-            : 'No specific FAQ context available.'
-
+        // 4. Construct Prompt
         const systemPrompt = `You are Campus Buddy, the official AI assistant for Anurag University.
-Use the UNIVERSITY DATA below to answer student questions accurately.
-Do not hallucinate. Do not make up contact numbers, specific dates, or registration deadlines not found in the data.
 
-When information is NOT in the data (e.g., specific exam dates, last dates, or real-time schedules):
-- Say that you don't have that specific detail
-- Direct them to the relevant official resource from the university data (website, portal, phone, or email)
-- Example: "For the exact last date to pay semester fees, please check the official website at https://www.anurag.edu.in/ or contact admissions at +91-8181057057 / admissionsic@anurag.edu.in"
-
-UNIVERSITY DATA:
+UNIVERSITY SPECIFIC KNOWLEDGE:
 ${JSON.stringify(campusInfo, null, 2)}
 
-FAQ CONTEXT:
-${contextText}
+INSTRUCTIONS:
+1. Always be helpful, polite, and professional.
+2. If the user asks something not in the knowledge base, say you don't know but offer general university assistance.
+3. Keep answers concise but complete.
+4. Format responses in clean markdown.`
 
-Always be friendly, helpful, and concise. Always end with: "Is there anything else I can help you with?"`
-
-        // Build messages array for OpenRouter (OpenAI-compatible format)
-        const chatMessages = [
-            { role: 'system', content: systemPrompt },
-            ...(history as { role: string; content: string }[]).slice(-6).map(h => ({
-                role: h.role === 'assistant' ? 'assistant' : 'user',
-                content: h.content,
-            })),
-            { role: 'user', content: message },
-        ]
-
-        // Call OpenRouter with a 25-second timeout
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 25000)
-
-        let res: Response
-        try {
-            res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${openRouterKey}`,
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': 'https://campus-genie-eight.vercel.app',
-                    'X-Title': 'Campus Buddy - Anurag University',
-                },
-                body: JSON.stringify({
-                    model: 'meta-llama/llama-3.3-70b-instruct:free',
-                    messages: chatMessages,
-                    max_tokens: 800,
-                    temperature: 0.7,
-                }),
-                signal: controller.signal,
+        // Format history for Gemini (needs entirely specific format or simple text block)
+        // For simplicity and stability in this raw prompt format, we bundle history into the system prompt context.
+        let conversationContext = systemPrompt + '\n\n--- PREVIOUS CONVERSATION ---\n'
+        if (Array.isArray(history)) {
+            history.slice(-6).forEach((h: any) => {
+                if (h.role && h.content) {
+                    conversationContext += `${h.role === 'user' ? 'User' : 'Assistant'}: ${h.content}\n`
+                }
             })
-        } finally {
-            clearTimeout(timeoutId)
+        }
+        conversationContext += `\n--- CURRENT USER MESSAGE ---\nUser: ${message}\nAssistant: `
+
+        // 5. 15s Timeout AbortController
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => {
+            controller.abort()
+        }, 15000)
+
+        console.log('[chat] Sending request to Gemini API...')
+
+        // 6. Execute Gemini Call with Timeout
+        // GoogleGenerativeAI SDK fetch doesn't directly expose AbortSignal elegantly in older versions, 
+        // but it aborts if the global Node fetch signals. We wrap in a Promise race for safety.
+
+        const generatePromise = model.generateContent(conversationContext)
+
+        const timeoutPromise = new Promise<{ timeout: true }>((_, reject) => {
+            setTimeout(() => reject(new Error('TIMEOUT')), 15000)
+        })
+
+        const result = await Promise.race([generatePromise, timeoutPromise]) as any
+        clearTimeout(timeoutId)
+
+        // 7. Log Raw Response
+        console.log('[chat] Gemini Raw Result:', JSON.stringify(result, null, 2).substring(0, 500) + '... [TRUNCATED]')
+
+        // 8. Safe Extraction
+        const responseData = result?.response
+        const extractedText =
+            responseData?.candidates?.[0]?.content?.parts
+                ?.map((p: any) => p.text)
+                ?.join(" ")
+
+        if (!extractedText) {
+            console.error('[chat-error] Safe extraction failed. No valid candidates found.')
+            console.error('Raw problematic response:', JSON.stringify(responseData, null, 2))
+            return NextResponse.json(
+                { success: false, message: '', error: 'The AI generated an empty or blocked response.' },
+                { status: 500 }
+            )
         }
 
-        if (!res.ok) {
-            const errBody = await res.text()
-            console.error('[chat] OpenRouter HTTP error:', res.status, errBody)
-            throw new Error(`OpenRouter returned ${res.status}: ${errBody}`)
-        }
+        console.log('[chat] Response extracted successfully. Length:', extractedText.length)
 
-        const data = await res.json()
-        console.log('[chat] OpenRouter response id:', data?.id, '| choices:', data?.choices?.length)
-
-        const text =
-            data?.choices?.[0]?.message?.content?.trim() ||
-            'No response generated. Please try again.'
-
-        const sources = contextChunks.map(c => ({ question: c.question, category: c.category }))
-
-        return new Response(
-            JSON.stringify({ success: true, message: text, sources }),
-            { headers: { 'Content-Type': 'application/json' } }
+        // 9. Return Structured JSON Success
+        return NextResponse.json(
+            { success: true, message: extractedText },
+            {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            }
         )
 
     } catch (error: any) {
-        console.error('[chat] Error:', error?.message || error)
+        // 10. Granular Error Logging & Handling
+        console.error('[chat-error] Caught Exception in Backend:')
 
-        const friendlyMessage =
-            error?.message?.includes('abort') || error?.message?.includes('timed out')
-                ? 'The AI took too long to respond. Please try again.'
-                : error?.message?.includes('401') || error?.message?.includes('403')
-                    ? 'AI service authentication failed. Please contact the administrator.'
-                    : error?.message?.includes('429')
-                        ? 'AI service rate limit reached. Please try again in a moment.'
-                        : 'Something went wrong. Please try again.'
+        const errorMessage = error.message || String(error)
+        console.error(errorMessage)
 
-        return new Response(
-            JSON.stringify({ success: false, message: '', error: friendlyMessage }),
-            { headers: { 'Content-Type': 'application/json' } }
+        if (errorMessage === 'TIMEOUT') {
+            return NextResponse.json(
+                { success: false, message: '', error: 'Request timed out waiting for AI response. Please try again.' },
+                { status: 504 }
+            )
+        }
+
+        if (errorMessage.includes('API key not valid')) {
+            return NextResponse.json(
+                { success: false, message: '', error: 'AI service configuration error (Invalid Key).' },
+                { status: 500 }
+            )
+        }
+
+        // Catch-all server failure
+        // NEVER expose raw Gemini HTTP errors/stack traces to frontend directly.
+        return NextResponse.json(
+            { success: false, message: '', error: 'An internal server error occurred while processing your request.' },
+            { status: 500 }
         )
     }
 }

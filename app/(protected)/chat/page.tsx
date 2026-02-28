@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/lib/firebase/AuthContext'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
     Send,
     Bot,
@@ -15,10 +14,11 @@ import {
     Volume2,
 } from 'lucide-react'
 
+// Message Structure
 interface Message {
     role: 'user' | 'assistant'
     content: string
-    sources?: { question: string; category: string }[]
+    isError?: boolean // Tracks if the message is actually a system error
 }
 
 const SUGGESTION_CHIPS = [
@@ -78,28 +78,39 @@ export default function ChatPage() {
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
     const [sendAnim, setSendAnim] = useState(false)
+
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
 
-    useEffect(() => {
+    // Auto-scroll to bottom of chat
+    const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+    useEffect(() => {
+        scrollToBottom()
     }, [messages])
 
     const sendMessage = async (text?: string) => {
         const userMessage = (text || input).trim()
         if (!userMessage || loading) return
 
+        // 1. Reset UI State
         setInput('')
         setSendAnim(true)
         setTimeout(() => setSendAnim(false), 1500)
 
-        setMessages(prev => [...prev, { role: 'user', content: userMessage }])
+        // Add user msg & placeholder bot msg
+        setMessages(prev => [
+            ...prev,
+            { role: 'user', content: userMessage },
+            { role: 'assistant', content: '' }
+        ])
         setLoading(true)
-        // Placeholder assistant bubble
-        setMessages(prev => [...prev, { role: 'assistant', content: '' }])
 
         try {
             const token = await user?.getIdToken()
+
+            // 2. Network Fetch Setup
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
@@ -108,45 +119,70 @@ export default function ChatPage() {
                 },
                 body: JSON.stringify({
                     message: userMessage,
-                    history: messages.slice(-10),
+                    history: messages.slice(-10), // Limit history depth
                 }),
             })
 
-            const data = await response.json()
-            console.log('Chat API full response:', data)
+            // 3. Strict JSON Parsing
+            let data: any
+            try {
+                data = await response.json()
+                console.log('[chat-debug] Full Response Data:', data)
+            } catch (parseError) {
+                console.error('[chat-error] Failed to parse JSON response:', parseError)
+                throw new Error('Server returned invalid data formatting.')
+            }
 
-            if (data?.success) {
+            // 4. Handle Valid JSON Responses via Schema
+            if (data && data.success === true) {
+                // Success path
                 setMessages(prev => {
                     const updated = [...prev]
                     updated[updated.length - 1] = {
                         role: 'assistant',
                         content: data.message || 'No response generated.',
-                        sources: data.sources || [],
+                        isError: false
                     }
                     return updated
                 })
             } else {
+                // Backend structured error path (data.success === false)
+                console.error(`[chat-error] API returned logical error:`, data?.error)
                 setMessages(prev => {
                     const updated = [...prev]
                     updated[updated.length - 1] = {
                         role: 'assistant',
-                        content: data?.error || 'Something went wrong. Please try again.',
+                        content: data?.error || 'The server encountered an issue. Please try again.',
+                        isError: true
                     }
                     return updated
                 })
             }
-        } catch (err) {
-            console.error('Fetch error:', err)
+
+        } catch (err: any) {
+            // 5. Hard Network or Critical Parsing Errors
+            console.error('[chat-error] Hard Client Exception:', err)
+
+            let displayMessage = 'Unable to reach the AI service right now. Please check your network connection.'
+            if (err.message.includes('parsing')) {
+                displayMessage = 'The server returned an unrecognizable response. Please contact support.'
+            }
+
             setMessages(prev => {
                 const updated = [...prev]
                 updated[updated.length - 1] = {
                     role: 'assistant',
-                    content: 'Unable to reach the AI service. Please check your connection and try again.',
+                    content: displayMessage,
+                    isError: true
                 }
                 return updated
             })
         } finally {
             setLoading(false)
+            // Optional: return focus to input on desktop
+            if (window.innerWidth > 768) {
+                inputRef.current?.focus()
+            }
         }
     }
 
@@ -159,24 +195,23 @@ export default function ChatPage() {
 
     return (
         <div className="flex flex-col h-[calc(100vh-4rem)] bg-[#0d1117] relative overflow-hidden">
-            {/* Background glow effects */}
+            {/* Background Details */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
                 <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-indigo-600/5 rounded-full blur-3xl" />
             </div>
 
-            {/* Disclaimer */}
+            {/* Disclaimer Bar */}
             <div className="relative z-10 flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs shrink-0">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>AI responses may be inaccurate. Verify critical information with the college office.</span>
             </div>
 
-            {/* Messages area */}
+            {/* Chat Container */}
             <div className="relative z-10 flex-1 overflow-y-auto px-4 py-6">
                 {messages.length === 0 ? (
-                    /* Landing / Welcome State */
+                    /* Initial Welcome View */
                     <div className="flex flex-col items-center justify-center min-h-full text-center pb-32">
-                        {/* Bot avatar */}
                         <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center mb-6 shadow-2xl shadow-blue-500/30 ring-1 ring-white/10">
                             <Bot className="w-10 h-10 text-white" />
                         </div>
@@ -188,7 +223,6 @@ export default function ChatPage() {
                             Ask me anything about Anurag University — I&apos;m here to assist!
                         </p>
 
-                        {/* Suggestion chips */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl w-full">
                             {SUGGESTION_CHIPS.map((chip) => (
                                 <button
@@ -202,7 +236,7 @@ export default function ChatPage() {
                         </div>
                     </div>
                 ) : (
-                    /* Chat messages */
+                    /* Active Chat View */
                     <div className="max-w-3xl mx-auto space-y-6 pb-32">
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -215,7 +249,9 @@ export default function ChatPage() {
                                 <div className={`max-w-[78%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
                                     <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user'
                                             ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-sm shadow-lg shadow-blue-500/20'
-                                            : 'bg-slate-800/70 border border-slate-700/50 text-slate-200 rounded-tl-sm backdrop-blur-sm'
+                                            : msg.isError
+                                                ? 'bg-red-950/50 border border-red-900/50 text-red-200 rounded-tl-sm'
+                                                : 'bg-slate-800/70 border border-slate-700/50 text-slate-200 rounded-tl-sm backdrop-blur-sm'
                                         }`}>
                                         {msg.content === '' && loading && i === messages.length - 1 ? (
                                             <div className="flex items-center gap-2 text-slate-400">
@@ -231,21 +267,11 @@ export default function ChatPage() {
                                         )}
                                     </div>
 
-                                    {/* Action buttons for assistant messages */}
-                                    {msg.role === 'assistant' && msg.content && (
+                                    {/* Action buttons (only show if not loading and not an error) */}
+                                    {msg.role === 'assistant' && msg.content && !msg.isError && (
                                         <div className="flex items-center gap-1 ml-1">
                                             <CopyButton text={msg.content} />
                                             <SpeakButton text={msg.content} />
-                                            {msg.sources && msg.sources.length > 0 && (
-                                                <div className="flex items-center gap-1 ml-2">
-                                                    {msg.sources.slice(0, 2).map((src, j) => (
-                                                        <Badge key={j} variant="secondary"
-                                                            className="text-[10px] h-4 bg-slate-800 text-slate-400 border-slate-700">
-                                                            {src.category}
-                                                        </Badge>
-                                                    ))}
-                                                </div>
-                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -257,12 +283,13 @@ export default function ChatPage() {
                                 )}
                             </div>
                         ))}
-                        <div ref={messagesEndRef} />
+                        {/* Scroll anchor */}
+                        <div ref={messagesEndRef} className="h-4" />
                     </div>
                 )}
             </div>
 
-            {/* Floating Input Bar */}
+            {/* Input Bar */}
             <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-4 pt-6 bg-gradient-to-t from-[#0d1117] via-[#0d1117]/95 to-transparent">
                 <div className="max-w-3xl mx-auto">
                     <div className="flex items-end gap-2 p-2 rounded-2xl bg-slate-800/80 backdrop-blur-md border border-slate-700/50 shadow-2xl shadow-black/50">
@@ -292,9 +319,6 @@ export default function ChatPage() {
                             }
                         </Button>
                     </div>
-                    <p className="text-center text-slate-600 text-xs mt-2">
-                        Campus Buddy · Powered by Anurag University knowledge base
-                    </p>
                 </div>
             </div>
 
