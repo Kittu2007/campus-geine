@@ -29,7 +29,7 @@ function checkRateLimit(userId: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
-    console.log('[chat] OpenRouter key length:', openRouterKey.length, '| model: mistralai/mistral-7b-instruct:free')
+    console.log('[chat] OpenRouter key length:', openRouterKey.length, '| model: meta-llama/llama-3.3-70b-instruct:free')
 
     try {
         // Auth check via Bearer token
@@ -130,7 +130,7 @@ Always be friendly, helpful, and concise. Always end with: "Is there anything el
                     'X-Title': 'Campus Buddy - Anurag University',
                 },
                 body: JSON.stringify({
-                    model: 'mistralai/mistral-7b-instruct:free',
+                    model: 'meta-llama/llama-3.3-70b-instruct:free',
                     messages: chatMessages,
                     max_tokens: 800,
                     temperature: 0.7,
