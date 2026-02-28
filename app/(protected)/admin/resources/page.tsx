@@ -34,8 +34,9 @@ export default function AdminResourcesPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [form, setForm] = useState({
-        title: '', subject: '', type: 'link', url: '', description: ''
+        title: '', subject: '', type: 'link', url: '', description: '', promptText: ''
     })
+    const [file, setFile] = useState<File | null>(null)
 
     useEffect(() => {
         fetchResources()
@@ -53,25 +54,55 @@ export default function AdminResourcesPage() {
 
     const addResource = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!form.title || !form.subject || !form.url) {
-            toast.error('Please fill all required fields')
+        let finalUrl = form.url
+
+        if (form.type === 'prompt') {
+            if (!form.promptText) {
+                toast.error('Please enter the prompt text')
+                return
+            }
+            finalUrl = '' // Prompts don't use URLs, they use descriptions
+        } else if (['pdf', 'video'].includes(form.type)) {
+            if (!file) {
+                toast.error('Please select a file to upload')
+                return
+            }
+        } else if (form.type === 'link' && !form.url) {
+            toast.error('Please provide a valid URL')
             return
         }
 
         setSaving(true)
         try {
             const supabase = createClient()
+
+            // 1. Upload file if required
+            if (['pdf', 'video'].includes(form.type) && file) {
+                toast.loading('Uploading file...')
+                const fileExt = file.name.split('.').pop()
+                const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
+                const { error: uploadError, data } = await supabase.storage
+                    .from('resources')
+                    .upload(`${form.subject}/${fileName}`, file)
+
+                if (uploadError) throw uploadError
+
+                const { data: publicUrl } = supabase.storage.from('resources').getPublicUrl(`${form.subject}/${fileName}`)
+                finalUrl = publicUrl.publicUrl
+                toast.dismiss()
+            }
             const { error } = await supabase.from('resources').insert({
                 title: form.title,
                 subject: form.subject,
                 type: form.type,
-                url: form.url,
-                description: form.description || null,
+                url: finalUrl,
+                description: form.type === 'prompt' ? form.promptText : (form.description || null),
                 uploaded_by: firebaseUser?.uid,
             })
             if (error) throw error
             toast.success('Resource added!')
-            setForm({ title: '', subject: '', type: 'link', url: '', description: '' })
+            setForm({ title: '', subject: '', type: 'link', url: '', description: '', promptText: '' })
+            setFile(null)
             fetchResources()
         } catch {
             toast.error('Failed to add resource')
@@ -140,16 +171,43 @@ export default function AdminResourcesPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-300">URL *</Label>
-                                <Input value={form.url} onChange={e => setForm({ ...form, url: e.target.value })}
-                                    className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500" placeholder="https://..." required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-300">Description</Label>
-                                <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                                    className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500" placeholder="Optional description" />
-                            </div>
+                            {['pdf', 'video'].includes(form.type) ? (
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300">Upload File *</Label>
+                                    <Input
+                                        type="file"
+                                        accept={form.type === 'pdf' ? '.pdf' : 'video/*'}
+                                        onChange={e => setFile(e.target.files?.[0] || null)}
+                                        className="bg-slate-700/50 border-slate-600 text-slate-300 file:bg-slate-600 file:text-white file:border-0 file:rounded-md file:px-2 file:py-1 hover:file:bg-slate-500"
+                                        required
+                                    />
+                                </div>
+                            ) : form.type === 'prompt' ? (
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300">Prompt / Question *</Label>
+                                    <Textarea
+                                        value={form.promptText}
+                                        onChange={e => setForm({ ...form, promptText: e.target.value })}
+                                        className="bg-slate-700/50 border-slate-600 text-white min-h-[100px]"
+                                        placeholder="Paste the prompt or tricky question here..."
+                                        required
+                                    />
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300">URL *</Label>
+                                    <Input value={form.url} onChange={e => setForm({ ...form, url: e.target.value })}
+                                        className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500" placeholder="https://..." required />
+                                </div>
+                            )}
+
+                            {form.type !== 'prompt' && (
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300">Description</Label>
+                                    <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+                                        className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500" placeholder="Optional description" />
+                                </div>
+                            )}
                             <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={saving}>
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
                                 Add Resource

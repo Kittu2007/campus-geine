@@ -84,8 +84,8 @@ export default function ResourcesPage() {
                             key={subject}
                             onClick={() => setSelectedSubject(subject)}
                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${selectedSubject === subject
-                                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                    : 'bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:text-white hover:bg-slate-700/50'
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                : 'bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:text-white hover:bg-slate-700/50'
                                 }`}
                         >
                             {subject}
@@ -114,27 +114,45 @@ export default function ResourcesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filtered.map(resource => {
                         const TypeIcon = typeIcons[resource.type] || FileText
+                        const isPrompt = resource.type === 'prompt'
+
+                        const CardWrapper = ({ children }: { children: React.ReactNode }) => {
+                            if (isPrompt) {
+                                return <div className="group h-full">{children}</div>
+                            }
+                            return (
+                                <a
+                                    href={resource.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group h-full block"
+                                >
+                                    {children}
+                                </a>
+                            )
+                        }
+
                         return (
-                            <a
-                                key={resource.id}
-                                href={resource.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group"
-                            >
-                                <Card className="h-full bg-slate-800/50 border-slate-700/50 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                                    <CardContent className="p-5">
+                            <CardWrapper key={resource.id}>
+                                <Card className="h-full bg-slate-800/50 border-slate-700/50 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex flex-col">
+                                    <CardContent className="p-5 flex-1 flex flex-col">
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                                                 <TypeIcon className="w-5 h-5 text-emerald-400" />
                                             </div>
-                                            <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
+                                            {!isPrompt && <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />}
                                         </div>
-                                        <h3 className="font-semibold text-white mb-1 line-clamp-2">{resource.title}</h3>
+                                        <h3 className="font-semibold text-white mb-2">{resource.title}</h3>
+
                                         {resource.description && (
-                                            <p className="text-xs text-slate-400 mb-3 line-clamp-2">{resource.description}</p>
+                                            <div className="flex-1 min-h-0 mb-3">
+                                                <p className={`text-sm text-slate-400 ${isPrompt ? 'whitespace-pre-wrap rounded-md bg-slate-900/50 p-3 italic' : 'line-clamp-2'}`}>
+                                                    {resource.description}
+                                                </p>
+                                            </div>
                                         )}
-                                        <div className="flex items-center gap-2">
+
+                                        <div className="flex items-center gap-2 mt-auto">
                                             <Badge variant="secondary" className="text-xs bg-slate-700/50 text-slate-300">
                                                 {resource.subject}
                                             </Badge>
@@ -144,7 +162,7 @@ export default function ResourcesPage() {
                                         </div>
                                     </CardContent>
                                 </Card>
-                            </a>
+                            </CardWrapper>
                         )
                     })}
                 </div>
