@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import {
-    AlertTriangle, Clock, CheckCircle2, WrenchIcon, Filter, Loader2, Image as ImageIcon
+    AlertTriangle, Clock, CheckCircle2, WrenchIcon, Filter, Loader2, Image as ImageIcon, Trash2
 } from 'lucide-react'
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
@@ -83,6 +83,18 @@ export default function AdminComplaintsPage() {
             fetchComplaints()
         }
         setUpdatingId(null)
+    }
+
+    const deleteComplaint = async (id: string) => {
+        if (!confirm('Are you sure you want to permanently delete this complaint? This cannot be undone.')) return
+        const supabase = createClient()
+        const { error } = await supabase.from('complaints').delete().eq('id', id)
+        if (error) {
+            toast.error('Failed to delete complaint')
+        } else {
+            toast.success('Complaint deleted')
+            fetchComplaints()
+        }
     }
 
     const handleResolveSubmit = async () => {
@@ -252,6 +264,15 @@ export default function AdminComplaintsPage() {
                                                     <Loader2 className="w-3 h-3 animate-spin" /> Saving...
                                                 </div>
                                             )}
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => deleteComplaint(complaint.id)}
+                                                className="w-full mt-1 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 text-xs h-8"
+                                            >
+                                                <Trash2 className="w-3 h-3 mr-1" />
+                                                Delete Complaint
+                                            </Button>
                                         </div>
                                     </div>
                                 </CardContent>
