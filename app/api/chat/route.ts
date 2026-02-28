@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import Groq from 'groq-sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
-})
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
-// Supabase admin client for server-side queries
+// Supabase client for FAQ queries
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -20,7 +18,7 @@ function checkRateLimit(userId: string): boolean {
     const entry = rateLimitMap.get(userId)
 
     if (!entry || now > entry.resetAt) {
-        rateLimitMap.set(userId, { count: 1, resetAt: now + 3600000 }) // 1 hour
+        rateLimitMap.set(userId, { count: 1, resetAt: now + 3600000 })
         return true
     }
 
@@ -31,13 +29,13 @@ function checkRateLimit(userId: string): boolean {
 
 export async function POST(request: NextRequest) {
     try {
-        // Simple auth check via Bearer token (Firebase ID token)
+        // Auth check via Bearer token
         const authHeader = request.headers.get('Authorization')
         if (!authHeader?.startsWith('Bearer ')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const userId = authHeader.slice(7).substring(0, 20) // Use token prefix as rate limit key
+        const userId = authHeader.slice(7).substring(0, 20)
 
         if (!checkRateLimit(userId)) {
             return NextResponse.json(
@@ -52,18 +50,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 })
         }
 
+        if (!process.env.GEMINI_API_KEY) {
+            return NextResponse.json({ error: 'AI service not configured' }, { status: 503 })
+        }
+
         // RAG: Try to find relevant FAQs
         let contextChunks: { question: string; answer: string; category: string }[] = []
 
         try {
-            // Fallback: load all FAQs as context (simpler and works without embeddings)
             const { data: faqs } = await supabase
                 .from('faqs')
                 .select('question, answer, category')
                 .limit(50)
 
             if (faqs && faqs.length > 0) {
-                // Simple keyword matching as fallback to vector search
                 const queryWords = message.toLowerCase().split(/\s+/)
                 const scored = faqs.map(faq => {
                     const faqText = `${faq.question} ${faq.answer}`.toLowerCase()
@@ -73,13 +73,12 @@ export async function POST(request: NextRequest) {
                 scored.sort((a, b) => b.score - a.score)
                 contextChunks = scored.slice(0, 5).filter(f => f.score > 0)
 
-                // If keyword matching finds nothing, include top FAQs as general context
                 if (contextChunks.length === 0) {
                     contextChunks = faqs.slice(0, 5)
                 }
             }
         } catch {
-            // Continue without FAQ context if DB query fails
+            // Continue without FAQ context
         }
 
         const contextText = contextChunks.length > 0
@@ -96,22 +95,23 @@ ${contextText}
 
 Always be friendly and helpful. Always end with: "Is there anything else I can help you with?"`
 
-        const chatMessages = [
-            { role: 'system' as const, content: systemPrompt },
-            ...history.slice(-6).map((h: { role: string; content: string }) => ({
-                role: h.role as 'user' | 'assistant',
-                content: h.content,
-            })),
-            { role: 'user' as const, content: message },
-        ]
+        // Build conversation history for Gemini
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
-        const completion = await groq.chat.completions.create({
-            model: 'llama-3.1-8b-instant',
-            messages: chatMessages,
-            stream: true,
-            temperature: 0.3,
-            max_tokens: 1024,
+        const chatHistory = history.slice(-6).map((h: { role: string; content: string }) => ({
+            role: h.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: h.content }],
+        }))
+
+        const chat = model.startChat({
+            history: [
+                { role: 'user', parts: [{ text: 'System instructions: ' + systemPrompt }] },
+                { role: 'model', parts: [{ text: 'Understood! I am Campus Buddy, the AI assistant for Anurag University. I will answer only based on the provided context. How can I help you?' }] },
+                ...chatHistory,
+            ],
         })
+
+        const result = await chat.sendMessageStream(message)
 
         // Create streaming response
         const encoder = new TextEncoder()
@@ -129,8 +129,8 @@ Always be friendly and helpful. Always end with: "Is there anything else I can h
                     controller.enqueue(encoder.encode(`data: ${sourcesData}\n\n`))
                 }
 
-                for await (const chunk of completion) {
-                    const content = chunk.choices[0]?.delta?.content || ''
+                for await (const chunk of result.stream) {
+                    const content = chunk.text()
                     if (content) {
                         const tokenData = JSON.stringify({ type: 'token', content })
                         controller.enqueue(encoder.encode(`data: ${tokenData}\n\n`))
