@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
+import Groq from 'groq-sdk'
 import campusInfo from '@/lib/university-context.json'
 
 // Basic in-memory rate limiting (Note: resets on serverless cold starts)
@@ -10,7 +10,7 @@ const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-    console.log('[chat] --- NEW REQUEST INITIATED (OpenAI) ---')
+    console.log('[chat] --- NEW REQUEST INITIATED (Groq) ---')
 
     // 1. IP Rate Limiting (Basic)
     const ip = request.headers.get('x-forwarded-for') || 'unknown-ip'
@@ -35,17 +35,17 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. API Key Validation
-    const rawKey = process.env.OPENAI_API_KEY
+    const rawKey = process.env.GROQ_API_KEY
     if (!rawKey) {
-        console.error('[chat-error] OPENAI_API_KEY is missing or undefined.')
+        console.error('[chat-error] GROQ_API_KEY is missing or undefined.')
         return NextResponse.json(
             { success: false, message: '', error: 'AI service configuration error. Please contact support.' },
             { status: 500 }
         )
     }
 
-    // Initialize OpenAI client
-    const openai = new OpenAI({ apiKey: rawKey.trim() })
+    // Initialize Groq client (same interface as OpenAI basically)
+    const groq = new Groq({ apiKey: rawKey.trim() })
 
     try {
         // 3. Body Validation
@@ -85,11 +85,11 @@ ${JSON.stringify(campusInfo, null, 2)}`
             { role: 'user' as const, content: message },
         ]
 
-        console.log(`[chat] Sending request to OpenAI API (gpt-4o-mini). History turns included: ${trimmedHistory.length / 2}`)
+        console.log(`[chat] Sending request to Groq API (llama-3.3-70b-versatile). History turns included: ${trimmedHistory.length / 2}`)
 
-        // 5. Execute OpenAI Call with 15s Timeout using Promise.race
-        const generatePromise = openai.chat.completions.create({
-            model: 'gpt-4o-mini',
+        // 5. Execute Groq Call with 15s Timeout using Promise.race
+        const generatePromise = groq.chat.completions.create({
+            model: 'llama-3.3-70b-versatile',
             messages: chatMessages,
             max_tokens: 500,
             temperature: 0.7,
@@ -99,16 +99,16 @@ ${JSON.stringify(campusInfo, null, 2)}`
             setTimeout(() => reject(new Error('TIMEOUT')), 15000)
         })
 
-        const result = await Promise.race([generatePromise, timeoutPromise]) as OpenAI.Chat.Completions.ChatCompletion
+        const result = await Promise.race([generatePromise, timeoutPromise]) as any
 
         // 6. Log Raw Response for debugging
-        console.log('[chat] OpenAI Raw Result:', JSON.stringify(result, null, 2).substring(0, 300) + '... [TRUNCATED]')
+        console.log('[chat] Groq Raw Result:', JSON.stringify(result, null, 2).substring(0, 300) + '... [TRUNCATED]')
 
         // 7. Safe Extraction
         const extractedText = result.choices?.[0]?.message?.content
 
         if (!extractedText) {
-            console.error('[chat-error] Empty response extracted from OpenAI.')
+            console.error('[chat-error] Empty response extracted from Groq.')
             return NextResponse.json(
                 { success: false, message: '', error: 'The AI generated an empty response.' },
                 { status: 500 }
@@ -138,21 +138,7 @@ ${JSON.stringify(campusInfo, null, 2)}`
             )
         }
 
-        // Separate: OpenAI API Errors
-        if (error instanceof OpenAI.APIError) {
-            console.error(`[chat-error] OpenAI API Error - Status: ${error.status}, Code: ${error.code}, Type: ${error.type}`)
-
-            if (error.status === 401) {
-                return NextResponse.json({ success: false, message: '', error: 'AI Authentication failed (Invalid API Key).' }, { status: 500 })
-            } else if (error.status === 429) {
-                return NextResponse.json({ success: false, message: '', error: 'OpenAI quota exceeded or rate limit reached.' }, { status: 429 })
-            } else if (error.status && error.status >= 500) {
-                return NextResponse.json({ success: false, message: '', error: 'OpenAI servers are currently experiencing issues.' }, { status: 502 })
-            }
-            return NextResponse.json({ success: false, message: '', error: `OpenAI API returned an error: ${error.message}` }, { status: 500 })
-        }
-
-        // Separate: JSON parsing, node network, general server logic failures
+        // Return explicit internal server error fallback 
         return NextResponse.json(
             { success: false, message: '', error: 'An internal server error occurred while processing the request.' },
             { status: 500 }
