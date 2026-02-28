@@ -142,10 +142,9 @@ INSTRUCTIONS:
             )
         }
 
-        // Catch-all server failure
-        // NEVER expose raw Gemini HTTP errors/stack traces to frontend directly.
+        // Return raw error temporarily for live production debugging
         return NextResponse.json(
-            { success: false, message: '', error: 'An internal server error occurred while processing your request.' },
+            { success: false, message: '', error: `SERVER ERROR: ${errorMessage} | STACK: ${error?.stack}` },
             { status: 500 }
         )
     }
