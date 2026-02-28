@@ -22,7 +22,7 @@ export default async function AdminDashboardPage() {
         { label: 'Total Complaints', value: complaintsCount || 0, icon: AlertTriangle, color: 'text-amber-400', href: '/admin/complaints' },
         { label: 'Pending Complaints', value: pendingCount || 0, icon: AlertTriangle, color: 'text-red-400', href: '/admin/complaints?filter=pending' },
         { label: 'Total Resources', value: resourcesCount || 0, icon: BookOpen, color: 'text-emerald-400', href: '/admin/resources' },
-        { label: 'Active Teams', value: teamsCount || 0, icon: Users, color: 'text-purple-400', href: '/teams' },
+        { label: 'Active Teams', value: teamsCount || 0, icon: Users, color: 'text-purple-400', href: '/admin/teams' },
     ]
 
     return (
@@ -57,7 +57,7 @@ export default async function AdminDashboardPage() {
                 })}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Link href="/admin/complaints">
                     <Card className="bg-slate-800/50 border-slate-700/50 hover:border-amber-500/30 transition-all cursor-pointer p-6">
                         <div className="flex items-center gap-4">
@@ -72,7 +72,7 @@ export default async function AdminDashboardPage() {
                     </Card>
                 </Link>
                 <Link href="/admin/resources">
-                    <Card className="bg-slate-800/50 border-slate-700/50 hover:border-emerald-500/30 transition-all cursor-pointer p-6">
+                    <Card className="bg-slate-800/50 border-slate-700/50 hover:border-emerald-500/30 transition-all cursor-pointer p-6 h-full">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                                 <BookOpen className="w-6 h-6 text-emerald-400" />
@@ -80,6 +80,19 @@ export default async function AdminDashboardPage() {
                             <div>
                                 <h3 className="font-semibold text-white">Manage Resources</h3>
                                 <p className="text-sm text-slate-400">Upload and manage study materials for students</p>
+                            </div>
+                        </div>
+                    </Card>
+                </Link>
+                <Link href="/admin/teams">
+                    <Card className="bg-slate-800/50 border-slate-700/50 hover:border-purple-500/30 transition-all cursor-pointer p-6 h-full">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                                <Users className="w-6 h-6 text-purple-400" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-white">Manage Teams</h3>
+                                <p className="text-sm text-slate-400">Moderate student hackathon team listings</p>
                             </div>
                         </div>
                     </Card>
