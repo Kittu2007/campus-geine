@@ -214,10 +214,13 @@ export default function LoginPage() {
                         </button>
                     </div>
 
-                    <div className="mt-4 pt-4 border-t border-slate-700/50">
+                    <div className="mt-4 pt-4 border-t border-slate-700/50 flex flex-col gap-2">
                         <p className="text-xs text-center text-slate-500">
                             🔒 Only <span className="text-slate-400 font-medium">@{allowedDomain}</span> emails are accepted. Secured by Firebase Authentication.
                         </p>
+                        <button type="button" onClick={() => router.push('/admin-login')} className="text-xs text-slate-500 hover:text-emerald-400 transition-colors">
+                            Admin Portal Access
+                        </button>
                     </div>
                 </CardContent>
             </Card>
