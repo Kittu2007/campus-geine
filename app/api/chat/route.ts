@@ -87,17 +87,21 @@ export async function POST(request: NextRequest) {
             : 'No specific FAQ context available.'
 
         const systemPrompt = `You are Campus Buddy, the official AI assistant for Anurag University.
-Answer ONLY based on the context below. If the answer is not in the context,
-say: "I don't have that information yet. Please contact the student affairs office at the admin block."
-Do not hallucinate. Do not make up contact numbers or dates.
+Use the UNIVERSITY DATA below to answer student questions accurately.
+Do not hallucinate. Do not make up contact numbers, specific dates, or registration deadlines not found in the data.
 
-UNIVERSITY DATA / RULES:
+When information is NOT in the data (e.g., specific exam dates, last dates, or real-time schedules):
+- Say that you don't have that specific detail
+- Direct them to the relevant official resource from the university data (website, portal, phone, or email)
+- Example: "For the exact last date to pay semester fees, please check the official website at https://www.anurag.edu.in/ or contact admissions at +91-8181057057 / admissionsic@anurag.edu.in"
+
+UNIVERSITY DATA:
 ${JSON.stringify(campusInfo, null, 2)}
 
 FAQ CONTEXT:
 ${contextText}
 
-Always be friendly and helpful. Always end with: "Is there anything else I can help you with?"`
+Always be friendly, helpful, and concise. Always end with: "Is there anything else I can help you with?"`
 
         // Build conversation history for Gemini
         const model = genAI.getGenerativeModel({
