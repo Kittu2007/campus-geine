@@ -54,41 +54,34 @@ export default function NewComplaintPage() {
         setLoading(true)
 
         try {
-            const supabase = createClient()
             if (!firebaseUser) throw new Error('Not authenticated')
 
-            let image_url = null
-
-            // Upload image if provided
+            const formData = new FormData()
+            formData.append('category', category)
+            formData.append('roomNo', roomNo)
+            formData.append('description', description)
             if (imageFile) {
-                const ext = imageFile.name.split('.').pop()
-                const fileName = `${firebaseUser.uid}/${Date.now()}.${ext}`
-                const { error: uploadError } = await supabase.storage
-                    .from('complaint-images')
-                    .upload(fileName, imageFile)
-
-                if (!uploadError) {
-                    const { data: urlData } = supabase.storage
-                        .from('complaint-images')
-                        .getPublicUrl(fileName)
-                    image_url = urlData.publicUrl
-                }
+                formData.append('imageFile', imageFile)
             }
 
-            const { error } = await supabase.from('complaints').insert({
-                user_id: firebaseUser.uid,
-                category,
-                room_no: roomNo,
-                description,
-                image_url,
+            const res = await fetch('/api/complaints', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${firebaseUser.uid}`
+                },
+                body: formData
             })
 
-            if (error) throw error
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to submit complaint')
+            }
 
             toast.success('Complaint submitted successfully!')
             router.push('/complaints')
-        } catch (err) {
-            toast.error('Failed to submit complaint. Please try again.')
+        } catch (err: any) {
+            toast.error(err?.message || 'Failed to submit complaint. Please try again.')
             console.error(err)
         } finally {
             setLoading(false)
