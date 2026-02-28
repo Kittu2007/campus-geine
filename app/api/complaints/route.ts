@@ -52,6 +52,19 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // Ensure the user exists in profiles table before inserting the complaint
+        // Try getting existing profile, or insert empty row if missing (lazy initialization)
+        const { data: existingProfile } = await supabaseAdmin.from('profiles').select('id').eq('id', userId).single()
+
+        if (!existingProfile) {
+            console.log("Profile not found, lazy-creating profile for ID:", userId)
+            const { error: profileError } = await supabaseAdmin.from('profiles').insert({ id: userId, email: 'unknown@example.com' })
+            if (profileError) {
+                console.error("Failed to lazy-create profile:", profileError)
+                return NextResponse.json({ error: 'Failed to initialize user profile', details: profileError.message }, { status: 500 })
+            }
+        }
+
         const { data, error } = await supabaseAdmin.from('complaints').insert({
             user_id: userId,
             category,
