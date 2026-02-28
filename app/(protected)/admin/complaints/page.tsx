@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import {
-    AlertTriangle, Clock, CheckCircle2, WrenchIcon, Filter, Loader2
+    AlertTriangle, Clock, CheckCircle2, WrenchIcon, Filter, Loader2, Image as ImageIcon
 } from 'lucide-react'
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
@@ -27,6 +28,7 @@ interface Complaint {
     status: string
     image_url: string | null
     admin_notes: string | null
+    resolution_image_url: string | null
     created_at: string
     profiles: { display_name: string | null; email: string } | null
 }
@@ -36,6 +38,10 @@ export default function AdminComplaintsPage() {
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('all')
     const [updatingId, setUpdatingId] = useState<string | null>(null)
+    const [resolveModalOpen, setResolveModalOpen] = useState(false)
+    const [resolvingComplaintId, setResolvingComplaintId] = useState<string | null>(null)
+    const [resolutionFile, setResolutionFile] = useState<File | null>(null)
+    const [isResolving, setIsResolving] = useState(false)
 
     useEffect(() => {
         fetchComplaints()
@@ -67,6 +73,40 @@ export default function AdminComplaintsPage() {
             fetchComplaints()
         }
         setUpdatingId(null)
+    }
+
+    const handleResolveSubmit = async () => {
+        if (!resolvingComplaintId || !resolutionFile) return
+        setIsResolving(true)
+        try {
+            const supabase = createClient()
+
+            const ext = resolutionFile.name.split('.').pop()
+            const fileName = `resolutions/${Date.now()}.${ext}`
+            const { error: uploadError } = await supabase.storage.from('complaint-images').upload(fileName, resolutionFile)
+
+            if (uploadError) throw uploadError
+
+            const { data: urlData } = supabase.storage.from('complaint-images').getPublicUrl(fileName)
+            const imageUrl = urlData.publicUrl
+
+            const { error: updateError } = await supabase
+                .from('complaints')
+                .update({ status: 'resolved', resolution_image_url: imageUrl, updated_at: new Date().toISOString() })
+                .eq('id', resolvingComplaintId)
+
+            if (updateError) throw updateError
+
+            toast.success('Complaint resolved successfully')
+            fetchComplaints()
+            setResolveModalOpen(false)
+            setResolvingComplaintId(null)
+            setResolutionFile(null)
+        } catch (error: any) {
+            toast.error('Failed to resolve: ' + error.message)
+        } finally {
+            setIsResolving(false)
+        }
     }
 
     const filtered = filter === 'all' ? complaints : complaints.filter(c => c.status === filter)
@@ -127,11 +167,20 @@ export default function AdminComplaintsPage() {
                                 <CardContent className="p-5">
                                     <div className="flex flex-col lg:flex-row gap-4">
                                         {/* Image */}
-                                        {complaint.image_url && (
-                                            <div className="w-full lg:w-32 h-24 rounded-lg overflow-hidden shrink-0 bg-slate-700">
-                                                <img src={complaint.image_url} alt="Complaint" className="w-full h-full object-cover" />
-                                            </div>
-                                        )}
+                                        <div className="w-full lg:w-32 flex flex-col gap-2 shrink-0">
+                                            {complaint.image_url && (
+                                                <div className="w-full h-24 rounded-lg overflow-hidden bg-slate-700 relative group">
+                                                    <img src={complaint.image_url} alt="Issue" className="w-full h-full object-cover" />
+                                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-white transition-opacity font-medium">Issue</div>
+                                                </div>
+                                            )}
+                                            {complaint.resolution_image_url && (
+                                                <div className="w-full h-24 rounded-lg overflow-hidden bg-emerald-900/40 relative group border border-emerald-500/20">
+                                                    <img src={complaint.resolution_image_url} alt="Resolution" className="w-full h-full object-cover" />
+                                                    <div className="absolute inset-0 bg-emerald-500/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-white transition-opacity font-medium">Resolution</div>
+                                                </div>
+                                            )}
+                                        </div>
 
                                         {/* Details */}
                                         <div className="flex-1 min-w-0">
@@ -153,7 +202,14 @@ export default function AdminComplaintsPage() {
                                         <div className="flex flex-col gap-2 shrink-0 w-full lg:w-48">
                                             <Select
                                                 value={complaint.status}
-                                                onValueChange={(v) => updateComplaint(complaint.id, { status: v })}
+                                                onValueChange={(v) => {
+                                                    if (v === 'resolved' && !complaint.resolution_image_url) {
+                                                        setResolvingComplaintId(complaint.id)
+                                                        setResolveModalOpen(true)
+                                                    } else {
+                                                        updateComplaint(complaint.id, { status: v })
+                                                    }
+                                                }}
                                             >
                                                 <SelectTrigger className={`${status.color} border text-xs h-8`}>
                                                     <SelectValue />
@@ -188,6 +244,44 @@ export default function AdminComplaintsPage() {
                     })}
                 </div>
             )}
+
+            <Dialog open={resolveModalOpen} onOpenChange={setResolveModalOpen}>
+                <DialogContent className="bg-slate-800 border-slate-700 text-white sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-emerald-400">
+                            <CheckCircle2 className="w-5 h-5" />
+                            Resolve Complaint
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <p className="text-sm text-slate-400 leading-relaxed">
+                            To mark this complaint as resolved, please upload a photo proving that the issue has been fixed. This will be visible to the student.
+                        </p>
+                        <div className="p-4 border border-dashed border-slate-600 rounded-lg flex flex-col items-center justify-center gap-3">
+                            <ImageIcon className="w-8 h-8 text-slate-500" />
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setResolutionFile(e.target.files?.[0] || null)}
+                                className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-emerald-600/20 file:text-emerald-400 hover:file:bg-emerald-600/30 font-medium"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white" onClick={() => {
+                            setResolveModalOpen(false)
+                            setResolutionFile(null)
+                            setResolvingComplaintId(null)
+                        }} disabled={isResolving}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleResolveSubmit} disabled={!resolutionFile || isResolving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                            {isResolving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                            Submit Resolution
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

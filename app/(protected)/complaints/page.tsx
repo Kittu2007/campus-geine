@@ -22,6 +22,8 @@ interface Complaint {
     description: string
     status: string
     image_url: string | null
+    admin_notes: string | null
+    resolution_image_url: string | null
     created_at: string
 }
 
@@ -98,6 +100,30 @@ export default function ComplaintsPage() {
                                             <p className="text-xs text-slate-500 mt-2">
                                                 {new Date(complaint.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </p>
+
+                                            {complaint.admin_notes && (
+                                                <div className="mt-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600/30">
+                                                    <p className="text-xs font-medium text-slate-400 mb-1">Admin Response:</p>
+                                                    <p className="text-sm text-slate-300">{complaint.admin_notes}</p>
+                                                </div>
+                                            )}
+
+                                            {(complaint.image_url || complaint.resolution_image_url) && (
+                                                <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+                                                    {complaint.image_url && (
+                                                        <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-slate-700 relative">
+                                                            <img src={complaint.image_url} alt="Issue" className="w-full h-full object-cover" />
+                                                            <div className="absolute inset-x-0 bottom-0 bg-black/60 text-[10px] text-center text-white p-0.5">Reported Issue</div>
+                                                        </div>
+                                                    )}
+                                                    {complaint.resolution_image_url && (
+                                                        <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-emerald-900/40 border border-emerald-500/20 relative">
+                                                            <img src={complaint.resolution_image_url} alt="Resolution" className="w-full h-full object-cover" />
+                                                            <div className="absolute inset-x-0 bottom-0 bg-emerald-900/80 text-[10px] text-center text-emerald-100 p-0.5 font-medium">Resolution</div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                         <Badge className={`${status.color} border shrink-0`}>
                                             <StatusIcon className="w-3 h-3 mr-1" />
