@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+const genAI = new GoogleGenerativeAI((process.env.GEMINI_API_KEY || '').trim())
 
 // Supabase client for FAQ queries
 const supabase = createClient(
@@ -96,19 +96,21 @@ ${contextText}
 Always be friendly and helpful. Always end with: "Is there anything else I can help you with?"`
 
         // Build conversation history for Gemini
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+        const model = genAI.getGenerativeModel({
+            model: 'gemini-2.0-flash',
+            systemInstruction: systemPrompt
+        })
 
         const chatHistory = history.slice(-6).map((h: { role: string; content: string }) => ({
             role: h.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: h.content }],
         }))
 
+        // Ensure history doesn't end with a user message if we are about to send another one
+        // (Though usually history only contains completed turns)
+
         const chat = model.startChat({
-            history: [
-                { role: 'user', parts: [{ text: 'System instructions: ' + systemPrompt }] },
-                { role: 'model', parts: [{ text: 'Understood! I am Campus Buddy, the AI assistant for Anurag University. I will answer only based on the provided context. How can I help you?' }] },
-                ...chatHistory,
-            ],
+            history: chatHistory,
         })
 
         const result = await chat.sendMessageStream(message)
@@ -129,13 +131,19 @@ Always be friendly and helpful. Always end with: "Is there anything else I can h
                     controller.enqueue(encoder.encode(`data: ${sourcesData}\n\n`))
                 }
 
-                for await (const chunk of result.stream) {
-                    const content = chunk.text()
-                    if (content) {
-                        const tokenData = JSON.stringify({ type: 'token', content })
-                        controller.enqueue(encoder.encode(`data: ${tokenData}\n\n`))
+                try {
+                    for await (const chunk of result.stream) {
+                        const content = chunk.text()
+                        if (content) {
+                            const tokenData = JSON.stringify({ type: 'token', content })
+                            controller.enqueue(encoder.encode(`data: ${tokenData}\n\n`))
+                        }
                     }
+                } catch (streamError) {
+                    console.error('Gemini Stream Error:', streamError)
+                    controller.enqueue(encoder.encode(`data: {"type":"error","content":"Stream interrupted"}\n\n`))
                 }
+
                 controller.close()
             },
         })
@@ -147,10 +155,10 @@ Always be friendly and helpful. Always end with: "Is there anything else I can h
                 'Connection': 'keep-alive',
             },
         })
-    } catch (error) {
-        console.error('Chat API error:', error)
+    } catch (error: any) {
+        console.error('Chat API error details:', error?.message || error)
         return NextResponse.json(
-            { error: 'Internal server error' },
+            { error: 'Internal server error', details: error?.message },
             { status: 500 }
         )
     }
