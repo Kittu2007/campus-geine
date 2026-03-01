@@ -89,18 +89,38 @@ ${JSON.stringify(campusInfo, null, 2)}`
             { role: 'user' as const, content: message },
         ]
 
-        console.log(`[chat] Sending request to Groq API (llama-3.3-70b-versatile).`)
+        console.log(`[chat] Sending request to Groq API.`)
 
-        // 5. Execute Groq Call
-        const completion = await groq.chat.completions.create({
-            messages: chatMessages,
-            model: "llama-3.3-70b-versatile",
-            max_completion_tokens: 500,
-            temperature: 0.6,
-        }).catch(err => {
-            console.error('[chat-error] Groq API call failed:', err.message)
-            throw err
-        })
+        const primaryModel = "llama-3.3-70b-versatile"
+        const fallbackModel = "llama-3.1-8b-instant"
+
+        let completion;
+        try {
+            // 5. Execute Primary Groq Call
+            completion = await groq.chat.completions.create({
+                messages: chatMessages,
+                model: primaryModel,
+                max_completion_tokens: 500,
+                temperature: 0.6,
+            })
+        } catch (error: any) {
+            // Check for rate limit (429) or overloaded service
+            if (error.status === 429 || error.message?.includes('Rate limit') || error.status === 503) {
+                console.warn(`[chat] Primary model (${primaryModel}) rate limited or busy. Falling back to ${fallbackModel}.`)
+                completion = await groq.chat.completions.create({
+                    messages: chatMessages,
+                    model: fallbackModel,
+                    max_completion_tokens: 500,
+                    temperature: 0.6,
+                }).catch(err => {
+                    console.error('[chat-error] Fallback Groq API call failed:', err.message)
+                    throw err
+                })
+            } else {
+                console.error('[chat-error] Groq API call failed:', error.message)
+                throw error
+            }
+        }
 
         // 6. Safe Extraction
         const extractedText = completion.choices?.[0]?.message?.content
