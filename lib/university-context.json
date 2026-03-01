@@ -217,6 +217,186 @@
     ],
     "official_page": "https://anurag.edu.in/academic-calendar/"
   },
+  "important_links": {
+    "academic_calendar": "https://anurag.edu.in/academic-calendar/",
+    "notifications": "https://anurag.edu.in/notifications/",
+    "faculty_directory": "https://anurag.edu.in/faculty-directory/",
+    "student_affairs": "https://anurag.edu.in/student-affairs/",
+    "international_college": "https://anurag.edu.in/anurag-university-international-college/",
+    "library": "https://anurag.edu.in/library/",
+    "iqac": "https://anurag.edu.in/iqac/",
+    "research": "https://anurag.edu.in/research/"
+  },
+  "important_pdfs": [
+    {
+      "title": "Anurag University Prospectus",
+      "year": "2024-25",
+      "url": "https://anurag.edu.in/wp-content/uploads/2024/03/Anurag-University_Prospectus-FINAL.pdf"
+    },
+    {
+      "title": "Innovations in Teaching & Learning (TLC)",
+      "year": "2023",
+      "url": "https://anurag.edu.in/wp-content/uploads/2023/04/TLC.pdf"
+    },
+    {
+      "title": "AU IT Newsletter Volume 9-1",
+      "year": "2021-22",
+      "url": "https://anurag.edu.in/wp-content/uploads/2023/06/AU-IT-News-Letter-volume-9-1-2021-22.pdf"
+    },
+    {
+      "title": "AU IT Newsletter Volume 9-2",
+      "year": "2022",
+      "url": "https://anurag.edu.in/wp-content/uploads/2023/06/AU-IT-Mag-vol-9-2-June-2022-30-jul.pdf"
+    }
+  ],
+  "exam_notifications_structure": {
+    "types": [
+      "Regular End Semester Examinations",
+      "Supplementary Examinations",
+      "Revaluation Notifications",
+      "Time Tables",
+      "Results Announcements"
+    ],
+    "regulation_codes": [
+      "R20",
+      "R22",
+      "R24"
+    ],
+    "location": "https://anurag.edu.in/notifications/"
+  },
+  "faculty": {
+    "School_of_Engineering": {
+      "Computer_Science_and_Engineering": [
+        {
+          "name": "S. Deepika",
+          "designation": "Assistant Professor"
+        },
+        {
+          "name": "P. Aparna",
+          "designation": "Assistant Professor"
+        },
+        {
+          "name": "T. Srikanth",
+          "designation": "Assistant Professor"
+        },
+        {
+          "name": "Rama Mrudula",
+          "designation": "Assistant Professor"
+        },
+        {
+          "name": "V. Ramakrishna",
+          "designation": "Assistant Professor"
+        },
+        {
+          "name": "G. Swapna",
+          "designation": "Assistant Professor"
+        }
+      ],
+      "Electronics_and_Communication_Engineering": [
+        {
+          "name": "Ch. V. Ravi Teja",
+          "designation": "Assistant Professor"
+        },
+        {
+          "name": "M. Shiva Kumar",
+          "designation": "Assistant Professor"
+        },
+        {
+          "name": "G. Ashwini",
+          "designation": "Assistant Professor"
+        },
+        {
+          "name": "Dr. N. Mangala Gouri",
+          "designation": "Associate Professor"
+        },
+        {
+          "name": "Dr. V. Gurumurthy",
+          "designation": "Professor"
+        }
+      ],
+      "Information_Technology": [
+        {
+          "name": "Dr. M. S. Hema",
+          "designation": "Professor"
+        },
+        {
+          "name": "B. Namratha",
+          "designation": "Assistant Professor"
+        },
+        {
+          "name": "Dr. K. B. Raju",
+          "designation": "Associate Professor"
+        },
+        {
+          "name": "V. Krishna",
+          "designation": "Assistant Professor"
+        }
+      ],
+      "Artificial_Intelligence": [
+        {
+          "name": "Prof. Syeda Sameen Fatima",
+          "designation": "Professor"
+        },
+        {
+          "name": "P. Archana",
+          "designation": "Assistant Professor"
+        },
+        {
+          "name": "N. Poorna Chandra Rao",
+          "designation": "Assistant Professor"
+        }
+      ],
+      "Civil_Engineering": [
+        {
+          "name": "Faculty List Available",
+          "source": "https://anurag.edu.in/faculty-directory/"
+        }
+      ],
+      "Mechanical_Engineering": [
+        {
+          "name": "Faculty List Available",
+          "source": "https://anurag.edu.in/faculty-directory/"
+        }
+      ]
+    }
+  },
+  "student_support_units": [
+    "Training and Placement Cell",
+    "Student Affairs Office",
+    "Examination Branch",
+    "Internal Quality Assurance Cell (IQAC)",
+    "Research & Development Cell",
+    "Library Services"
+  ],
+  "academics": {
+    "timetables": {
+      "exam_timetable_links": [
+        "R22 B.Tech IV Year I-Semester End Examinations Timetable 2025",
+        "R24 B.Tech II Year I Semester End Examinations Timetable 2025",
+        "Multiple Supplementary & Midterm Timetables (R20, R22, R24, R15, R18)",
+        "B.Tech Honors & Minor End Examinations Timetable"
+      ],
+      "base_url": "https://anurag.edu.in/time-table/"
+    },
+    "notifications": {
+      "exam_notifications_pdf": [
+        "One Time Chance Examinations Notifications – 2024",
+        "R23 First MBBS Supplementary Examinations Notification – 2024",
+        "Multiple R22 & R24 B.Sc (Nursing) Regular & Supplementary Notices",
+        "Multiple R21 & R24 B.Sc (Hons) Agriculture Notifications"
+      ],
+      "source": "https://anurag.edu.in/notifications/"
+    },
+    "academic_regulations": {
+      "documents": [
+        "Academic Regulations for B.Tech Programs (AU-R24, AU-R22, AU-R20)",
+        "Academic Regulations for M.Tech Programs (AU-R24, AU-R21)",
+        "Academic Regulations for BBA, MBA, MCA, Pharmacy Programs",
+        "Ph.D Program Academic Regulations (AU-R24, AU-R21)"
+      ],
+      "source": "https://anurag.edu.in/academic-regulations/"
+    }
+  },
   "intents": [
     {
       "name": "Welcome",
