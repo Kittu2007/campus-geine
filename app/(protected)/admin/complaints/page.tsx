@@ -13,13 +13,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import {
-    AlertTriangle, Clock, CheckCircle2, WrenchIcon, Filter, Loader2, Image as ImageIcon, Trash2
+    AlertTriangle, Clock, CheckCircle2, WrenchIcon, Filter, Loader2, Image as ImageIcon, Trash2, ArrowRight, ShieldCheck, Database
 } from 'lucide-react'
 
 const statusConfig: Record<string, { label: string; color: string; border: string; icon: React.ElementType }> = {
-    pending: { label: 'Pending', color: 'bg-amber-100 text-amber-700 border-amber-200', border: 'border-l-amber-500', icon: Clock },
-    in_progress: { label: 'In Progress', color: 'bg-blue-100 text-blue-700 border-blue-200', border: 'border-l-blue-500', icon: WrenchIcon },
-    resolved: { label: 'Resolved', color: 'bg-green-100 text-green-700 border-green-200', border: 'border-l-green-600', icon: CheckCircle2 },
+    pending: { label: 'Pending', color: 'bg-amber-50 text-amber-700 border-amber-100', border: 'border-l-amber-500', icon: Clock },
+    in_progress: { label: 'In Progress', color: 'bg-[#1E2B58]/5 text-[#1E2B58] border-[#1E2B58]/10', border: 'border-l-[#1E2B58]', icon: WrenchIcon },
+    resolved: { label: 'Resolved', color: 'bg-emerald-50 text-emerald-700 border-emerald-100', border: 'border-l-emerald-600', icon: CheckCircle2 },
 }
 
 interface Complaint {
@@ -46,7 +46,6 @@ export default function AdminComplaintsPage() {
     const [isResolving, setIsResolving] = useState(false)
 
     useEffect(() => {
-        // Read initial filter from URL if present
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search)
             const f = params.get('filter')
@@ -77,278 +76,192 @@ export default function AdminComplaintsPage() {
             .eq('id', id)
 
         if (error) {
-            toast.error('Failed to update')
+            toast.error('Sync Error')
         } else {
-            toast.success('Complaint updated')
+            toast.success('Central Registry Updated')
             fetchComplaints()
         }
         setUpdatingId(null)
     }
 
     const deleteComplaint = async (id: string) => {
-        if (!confirm('Are you sure you want to permanently delete this complaint? This cannot be undone.')) return
+        if (!confirm('Execute permanent deletion of record?')) return
         const supabase = createClient()
         const { error } = await supabase.from('complaints').delete().eq('id', id)
         if (error) {
-            toast.error('Failed to delete complaint')
+            toast.error('Deletion Failed')
         } else {
-            toast.success('Complaint deleted')
+            toast.success('Record Erased')
             fetchComplaints()
         }
     }
 
-    const handleResolveSubmit = async () => {
-        if (!resolvingComplaintId || !resolutionFile) return
-        setIsResolving(true)
-        try {
-            const supabase = createClient()
-
-            const ext = resolutionFile.name.split('.').pop()
-            const fileName = `resolutions/${Date.now()}.${ext}`
-            const { error: uploadError } = await supabase.storage.from('complaint-images').upload(fileName, resolutionFile)
-
-            if (uploadError) throw uploadError
-
-            const { data: urlData } = supabase.storage.from('complaint-images').getPublicUrl(fileName)
-            const imageUrl = urlData.publicUrl
-
-            const { error: updateError } = await supabase
-                .from('complaints')
-                .update({ status: 'resolved', resolution_image_url: imageUrl, updated_at: new Date().toISOString() })
-                .eq('id', resolvingComplaintId)
-
-            if (updateError) throw updateError
-
-            toast.success('Complaint resolved successfully')
-            fetchComplaints()
-            setResolveModalOpen(false)
-            setResolvingComplaintId(null)
-            setResolutionFile(null)
-        } catch (error: any) {
-            toast.error('Failed to resolve: ' + error.message)
-        } finally {
-            setIsResolving(false)
-        }
-    }
-
-    const filtered = filter === 'all' ? complaints : complaints.filter(c => c.status === filter)
+    const filtered = complaints.filter(c => filter === 'all' || c.status === filter)
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8 font-sans">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="max-w-7xl mx-auto px-1 py-8 animate-slide-in">
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4 mb-10">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <div className="bg-red-100 p-2 rounded-lg">
-                            <AlertTriangle className="w-6 h-6 text-red-600" />
-                        </div>
-                        Complaints Admin
+                    <div className="flex items-center gap-2 mb-2 text-[#C62026] font-bold text-xs uppercase tracking-[0.2em]">
+                        <div className="w-8 h-px bg-[#C62026]" />
+                        Governance Core
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-black text-[#1E2B58] tracking-tighter uppercase">
+                        Administrative <span className="text-[#C62026]">Control</span>
                     </h1>
-                    <p className="text-sm text-slate-500 mt-2">Manage and resolve student infrastructure issues</p>
                 </div>
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm w-fit">
-                    <Filter className="w-4 h-4 text-slate-400" />
-                    <Select value={filter} onValueChange={setFilter}>
-                        <SelectTrigger className="w-36 border-none bg-transparent shadow-none focus:ring-0 text-slate-700 font-medium">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-slate-200 rounded-xl shadow-lg">
-                            <SelectItem value="all" className="focus:bg-slate-50">All Complaints</SelectItem>
-                            <SelectItem value="pending" className="focus:bg-amber-50 focus:text-amber-700">Pending</SelectItem>
-                            <SelectItem value="in_progress" className="focus:bg-blue-50 focus:text-blue-700">In Progress</SelectItem>
-                            <SelectItem value="resolved" className="focus:bg-green-50 focus:text-green-700">Resolved</SelectItem>
-                        </SelectContent>
-                    </Select>
+
+                <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-sm">
+                    {['all', 'pending', 'in_progress', 'resolved'].map((f) => (
+                        <button
+                            key={f}
+                            onClick={() => setFilter(f)}
+                            className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm ${filter === f
+                                    ? 'bg-white text-[#1E2B58] shadow-sm'
+                                    : 'text-slate-500 hover:text-[#1E2B58]'
+                                }`}
+                        >
+                            {f.replace('_', ' ')}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                {['pending', 'in_progress', 'resolved'].map(s => {
-                    const config = statusConfig[s]
-                    const count = complaints.filter(c => c.status === s).length
-                    const Icon = config.icon
-                    return (
-                        <Card key={s} className="bg-white border-slate-200 shadow-sm">
-                            <CardContent className="flex items-center gap-4 p-5">
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${config.color.split(' ')[0]}`}>
-                                    <Icon className={`w-6 h-6 ${config.color.split(' ')[1]}`} />
-                                </div>
-                                <div>
-                                    <p className="text-3xl font-bold text-slate-800 tracking-tight">{count}</p>
-                                    <p className="text-sm font-medium text-slate-500">{config.label}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )
-                })}
-            </div>
-
-            {loading ? (
-                <div className="space-y-4">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-40 bg-slate-100 rounded-xl" />)}
-                </div>
-            ) : filtered.length === 0 ? (
-                <Card className="bg-slate-50 border-slate-200 border-dashed border-2 shadow-none">
-                    <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="bg-slate-100 p-4 rounded-full mb-4">
-                            <CheckCircle2 className="w-10 h-10 text-slate-400" />
+            {/* Content Matrix */}
+            <div className="px-4">
+                {loading ? (
+                    <div className="space-y-4">
+                        {[1, 2, 3].map(i => (
+                            <Skeleton key={i} className="h-40 w-full bg-slate-100 rounded-sm" />
+                        ))}
+                    </div>
+                ) : filtered.length === 0 ? (
+                    <div className="py-20 text-center border-[1.5px] border-dashed border-slate-200 bg-slate-50/50 rounded-sm">
+                        <div className="w-16 h-16 rounded-sm bg-white border border-slate-200 flex items-center justify-center mx-auto mb-6 shadow-sm">
+                            <ShieldCheck className="w-8 h-8 text-slate-300" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-700 mb-2">All clear!</h3>
-                        <p className="text-sm text-slate-500 max-w-sm">There are no complaints matching this filter.</p>
-                    </CardContent>
-                </Card>
-            ) : (
-                <div className="space-y-5">
-                    {filtered.map(complaint => {
-                        const status = statusConfig[complaint.status]
-                        return (
-                            <Card key={complaint.id} className={`bg-white border-y border-r border-slate-200 border-l-4 ${status.border} shadow-sm transition-all duration-200 hover:shadow-md rounded-xl overflow-hidden`}>
-                                <CardContent className="p-5 sm:p-6">
-                                    <div className="flex flex-col lg:flex-row gap-6">
-                                        {/* Image */}
-                                        <div className="w-full lg:w-40 flex flex-row lg:flex-col gap-3 shrink-0 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide">
-                                            {complaint.image_url && (
-                                                <div className="w-24 h-24 lg:w-full lg:h-28 rounded-xl overflow-hidden bg-slate-100 relative group border border-slate-200 shrink-0">
-                                                    <img src={complaint.image_url} alt="Issue" className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300" />
-                                                    <div className="absolute inset-x-0 bottom-0 bg-slate-900/70 text-[10px] text-center text-white py-1 font-medium backdrop-blur-sm">Issue Image</div>
-                                                </div>
-                                            )}
-                                            {complaint.resolution_image_url && (
-                                                <div className="w-24 h-24 lg:w-full lg:h-28 rounded-xl overflow-hidden bg-green-50 border border-green-200 relative group shrink-0">
-                                                    <img src={complaint.resolution_image_url} alt="Resolution" className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300" />
-                                                    <div className="absolute inset-x-0 bottom-0 bg-green-800/80 text-[10px] text-center text-white py-1 font-medium backdrop-blur-sm">Fix Proof</div>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Details */}
-                                        <div className="flex-1 min-w-0 flex flex-col">
-                                            <div className="flex items-center gap-2 mb-3 flex-wrap">
-                                                <Badge variant="outline" className="capitalize text-xs text-slate-600 bg-slate-50 border-slate-300 font-medium">
-                                                    {complaint.category.replace('_', ' ')}
-                                                </Badge>
-                                                <Badge className={`${status.color} border shrink-0 text-xs px-2 py-0.5`}>
-                                                    <status.icon className="w-3.5 h-3.5 mr-1" />
-                                                    {status.label}
-                                                </Badge>
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 bg-slate-50 w-fit px-3 py-1.5 rounded-lg border border-slate-100">
-                                                <span className="text-xs font-semibold text-slate-600 bg-white px-1.5 py-0.5 rounded shadow-sm border border-slate-200">Room {complaint.room_no}</span>
-                                                <span className="text-slate-300 text-xs">|</span>
-                                                <span className="text-xs font-medium text-slate-600 flex items-center gap-1.5">
-                                                    <div className="w-4 h-4 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[8px] font-bold">
-                                                        {(complaint.profiles?.display_name || complaint.profiles?.email || 'S')[0].toUpperCase()}
+                        <h3 className="text-xl font-black text-[#1E2B58] tracking-tighter uppercase mb-2 italic">Queue Clear</h3>
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No active anomalies in the current filter matrix</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-1 bg-slate-100 p-px border border-slate-200 overflow-hidden">
+                        {filtered.map(complaint => {
+                            const status = statusConfig[complaint.status] || statusConfig.pending
+                            const StatusIcon = status.icon
+                            return (
+                                <Card key={complaint.id} className="bg-white border-none rounded-none shadow-none group relative overflow-hidden transition-all duration-300 hover:z-10 shadow-sm border-l-[6px] border-l-[#1E2B58]">
+                                    <CardContent className="p-8">
+                                        <div className="flex flex-col lg:flex-row gap-8">
+                                            {/* Report Details */}
+                                            <div className="flex-1 space-y-6">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`flex items-center gap-1.5 px-3 py-1 border rounded-sm ${status.color}`}>
+                                                            <StatusIcon className="w-3 h-3" />
+                                                            <span className="text-[10px] font-black uppercase tracking-widest">{status.label}</span>
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                                                            LOG: #{complaint.id.slice(0, 8)}
+                                                        </span>
                                                     </div>
-                                                    {complaint.profiles?.display_name || complaint.profiles?.email?.split('@')[0]}
-                                                </span>
-                                            </div>
-                                            <p className="text-[15px] text-slate-800 mb-4 leading-relaxed font-medium">{complaint.description}</p>
-                                            <p className="text-xs text-slate-400 font-medium mt-auto">
-                                                Reported: {new Date(complaint.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
-                                            </p>
-                                        </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => deleteComplaint(complaint.id)}
+                                                        className="text-slate-300 hover:text-[#C62026] hover:bg-red-50"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
 
-                                        {/* Actions */}
-                                        <div className="flex flex-col gap-3 shrink-0 w-full lg:w-64 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                            <div>
-                                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Update Status</label>
-                                                <Select
-                                                    value={complaint.status}
-                                                    onValueChange={(v) => {
-                                                        if (v === 'resolved' && !complaint.resolution_image_url) {
-                                                            setResolvingComplaintId(complaint.id)
-                                                            setResolveModalOpen(true)
-                                                        } else {
-                                                            updateComplaint(complaint.id, { status: v })
-                                                        }
-                                                    }}
-                                                >
-                                                    <SelectTrigger className="bg-white border-slate-200 text-sm h-10 shadow-sm focus:ring-blue-600 font-medium text-slate-700">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="bg-white border-slate-200 rounded-xl shadow-lg">
-                                                        <SelectItem value="pending" className="focus:bg-amber-50">⏳ Pending</SelectItem>
-                                                        <SelectItem value="in_progress" className="focus:bg-blue-50">🔧 In Progress</SelectItem>
-                                                        <SelectItem value="resolved" className="focus:bg-green-50">✅ Resolved</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+                                                <div>
+                                                    <h3 className="text-xl font-black text-[#1E2B58] tracking-tight uppercase mb-2">
+                                                        Room {complaint.room_no} • {complaint.category.replace('_', ' ')}
+                                                    </h3>
+                                                    <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-3xl border-l-[3px] border-slate-100 pl-4 py-1">
+                                                        {complaint.description}
+                                                    </p>
+                                                </div>
 
-                                            <div className="flex-1 relative">
-                                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Admin Notes</label>
-                                                <Textarea
-                                                    placeholder="Add resolution notes..."
-                                                    defaultValue={complaint.admin_notes || ''}
-                                                    className="text-sm bg-white border-slate-200 text-slate-800 placeholder:text-slate-400 min-h-[80px] focus-visible:ring-blue-600 shadow-sm resize-none"
-                                                    onBlur={(e) => {
-                                                        if (e.target.value !== (complaint.admin_notes || '')) {
-                                                            updateComplaint(complaint.id, { admin_notes: e.target.value })
-                                                        }
-                                                    }}
-                                                />
-                                                {updatingId === complaint.id && (
-                                                    <div className="absolute bottom-2 right-2 flex items-center gap-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 shadow-sm">
-                                                        <Loader2 className="w-3 h-3 animate-spin" /> Saving
+                                                <div className="flex items-center gap-6 pt-4 border-t border-slate-50">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-sm bg-slate-100 flex items-center justify-center">
+                                                            <User className="w-3 h-3 text-slate-500" />
+                                                        </div>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                            {complaint.profiles?.display_name || complaint.profiles?.email.split('@')[0]}
+                                                        </span>
                                                     </div>
-                                                )}
+                                                    <div className="flex items-center gap-2">
+                                                        <Clock className="w-3.5 h-3.5 text-slate-300" />
+                                                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                                                            {new Date(complaint.created_at).toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
 
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => deleteComplaint(complaint.id)}
-                                                className="w-full bg-white border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 text-xs h-9 shadow-sm"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                                                Delete Complaint
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )
-                    })}
-                </div>
-            )}
+                                            {/* Admin Controls */}
+                                            <div className="w-full lg:w-80 bg-slate-50 p-6 rounded-sm border border-slate-200/60 space-y-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Update Status</label>
+                                                    <Select
+                                                        defaultValue={complaint.status}
+                                                        onValueChange={(val) => updateComplaint(complaint.id, { status: val })}
+                                                        disabled={updatingId === complaint.id}
+                                                    >
+                                                        <SelectTrigger className="h-10 bg-white rounded-sm border-slate-200 font-bold uppercase tracking-widest text-[10px] focus:ring-[#1E2B58]">
+                                                            {updatingId === complaint.id ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : <SelectValue />}
+                                                        </SelectTrigger>
+                                                        <SelectContent className="rounded-sm border-slate-200 shadow-xl">
+                                                            <SelectItem value="pending" className="font-bold uppercase tracking-widest text-[10px] py-3">Pending</SelectItem>
+                                                            <SelectItem value="in_progress" className="font-bold uppercase tracking-widest text-[10px] py-3">In Progress</SelectItem>
+                                                            <SelectItem value="resolved" className="font-bold uppercase tracking-widest text-[10px] py-3">Resolved</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
 
-            <Dialog open={resolveModalOpen} onOpenChange={setResolveModalOpen}>
-                <DialogContent className="bg-white border-slate-200 text-slate-800 sm:max-w-md rounded-2xl shadow-xl">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-green-600 font-bold text-xl">
-                            <CheckCircle2 className="w-6 h-6" />
-                            Resolve Complaint
-                        </DialogTitle>
-                        <DialogDescription className="text-slate-500 mt-2">
-                            To mark this complaint as resolved, please upload a photo proving that the issue has been fixed. This will be visible to the student.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="py-2">
-                        <div className="p-6 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-4 bg-slate-50 hover:bg-slate-100 hover:border-blue-300 transition-colors">
-                            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                                <ImageIcon className="w-6 h-6 text-blue-600" />
-                            </div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => setResolutionFile(e.target.files?.[0] || null)}
-                                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition-colors file:cursor-pointer cursor-pointer"
-                            />
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Admin Intelligence Notes</label>
+                                                    <Textarea
+                                                        placeholder="Enter resolution notes..."
+                                                        defaultValue={complaint.admin_notes || ''}
+                                                        onBlur={(e) => {
+                                                            if (e.target.value !== (complaint.admin_notes || '')) {
+                                                                updateComplaint(complaint.id, { admin_notes: e.target.value })
+                                                            }
+                                                        }}
+                                                        className="min-h-[100px] bg-white rounded-sm border-slate-200 text-xs font-medium resize-none p-3"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
+
+            {/* Footer Status */}
+            <div className="mt-12 px-4">
+                <div className="bg-[#1E2B58] text-white p-6 rounded-sm flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-sm bg-[#C62026] flex items-center justify-center shadow-lg">
+                            <Database className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-black uppercase tracking-[0.2em]">Synchronization Core</p>
+                            <p className="text-[10px] font-medium text-blue-200 mt-1 uppercase tracking-widest">Real-time governance matrix operational</p>
                         </div>
                     </div>
-                    <DialogFooter className="mt-2 text-right sm:justify-end">
-                        <Button variant="ghost" className="text-slate-500 hover:text-slate-800 hover:bg-slate-100 font-semibold" onClick={() => {
-                            setResolveModalOpen(false)
-                            setResolutionFile(null)
-                            setResolvingComplaintId(null)
-                        }} disabled={isResolving}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleResolveSubmit} disabled={!resolutionFile || isResolving} className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-sm">
-                            {isResolving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                            Submit Resolution
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    <div className="hidden md:block">
+                        <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest text-right italic">Genie Administrative Unit • Secure Layer</p>
+                    </div>
+                </div>
+            </div>
         </div>
     )
-}
+} 

@@ -111,22 +111,26 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 font-sans text-slate-800">
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl" />
-                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-600/5 rounded-full blur-3xl" />
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans text-slate-800 relative overflow-hidden">
+            {/* Geometric Background effects */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#1E2B58]/5 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#C62026]/5 rounded-full blur-3xl animate-pulse delay-1000" />
             </div>
 
-            <Card className="w-full max-w-md border-slate-200 bg-white/90 backdrop-blur-xl shadow-xl relative z-10 rounded-2xl">
+            {/* Grid pattern overlay */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(30,43,88,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(30,43,88,0.03)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none" />
+
+            <Card className="w-full max-w-md border-[1.5px] border-slate-200 bg-white/95 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] relative z-10 rounded-sm animate-slide-in">
                 <CardHeader className="text-center space-y-4 pt-8">
                     <div className="mx-auto flex flex-col items-center justify-center">
                         <img src="/anurag-logo.png" alt="Anurag University" className="w-16 h-16 object-contain mb-2" />
-                        <h1 className="text-xl font-bold tracking-tight text-blue-900">Campus Genie</h1>
+                        <h1 className="text-xl font-bold tracking-tight text-[#1E2B58]">Campus Genie</h1>
                     </div>
                     <CardTitle className="text-2xl font-bold text-slate-800">
                         {mode === 'signin' ? 'Welcome Back' : 'Create Account'}
                     </CardTitle>
-                    <CardDescription className="text-slate-500">
+                    <CardDescription className="text-slate-500 font-medium">
                         {mode === 'signin'
                             ? 'Sign in with your institutional credentials'
                             : 'Register with your university email to get started'}
@@ -134,40 +138,40 @@ export default function LoginPage() {
                 </CardHeader>
 
                 {/* Mode Toggle Tabs */}
-                <div className="px-6 mb-2">
-                    <div className="flex bg-slate-100 rounded-lg p-1">
+                <div className="px-6 mb-4">
+                    <div className="flex bg-slate-100 rounded-sm p-1 border border-slate-200/50">
                         <button type="button" onClick={() => { setMode('signin'); setMessage(null) }}
-                            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 ${mode === 'signin' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+                            className={`flex-1 py-2 text-sm font-semibold rounded-sm transition-all duration-200 ${mode === 'signin' ? 'bg-white text-[#1E2B58] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
                             Sign In
                         </button>
                         <button type="button" onClick={() => { setMode('signup'); setMessage(null) }}
-                            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 ${mode === 'signup' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+                            className={`flex-1 py-2 text-sm font-semibold rounded-sm transition-all duration-200 ${mode === 'signup' ? 'bg-white text-[#1E2B58] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
                             Sign Up
                         </button>
                     </div>
                 </div>
 
                 <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4 px-2">
                         <div className="space-y-2">
-                            <Label htmlFor="email" className="text-slate-700 font-medium">Email Address</Label>
+                            <Label htmlFor="email" className="text-[#1E2B58] font-bold text-xs uppercase tracking-wider">Email Address</Label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <Input id="email" type="email" placeholder={`your.name@${allowedDomain}`}
                                     value={email} onChange={(e) => setEmail(e.target.value)}
-                                    className="pl-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400 focus-visible:ring-blue-600 focus-visible:ring-2 focus-visible:ring-offset-0 transition-all duration-200" required />
+                                    className="pl-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400 focus-visible:ring-[#1E2B58] focus-visible:ring-1 focus-visible:border-[#1E2B58] focus-visible:ring-offset-0 transition-all duration-200 rounded-sm" required />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="password" className="text-slate-700 font-medium">Password</Label>
+                            <Label htmlFor="password" className="text-[#1E2B58] font-bold text-xs uppercase tracking-wider">Password</Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••"
                                     value={password} onChange={(e) => setPassword(e.target.value)}
-                                    className="pl-10 pr-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400 focus-visible:ring-blue-600 focus-visible:ring-2 focus-visible:ring-offset-0 transition-all duration-200" required minLength={6} />
+                                    className="pl-10 pr-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400 focus-visible:ring-[#1E2B58] focus-visible:ring-1 focus-visible:border-[#1E2B58] focus-visible:ring-offset-0 transition-all duration-200 rounded-sm" required minLength={6} />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#1E2B58] transition-colors">
                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                             </div>
@@ -175,18 +179,18 @@ export default function LoginPage() {
 
                         {mode === 'signup' && (
                             <div className="space-y-2">
-                                <Label htmlFor="confirmPassword" className="text-slate-700 font-medium">Confirm Password</Label>
+                                <Label htmlFor="confirmPassword" className="text-[#1E2B58] font-bold text-xs uppercase tracking-wider">Confirm Password</Label>
                                 <div className="relative">
                                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                     <Input id="confirmPassword" type={showPassword ? 'text' : 'password'} placeholder="••••••••"
                                         value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="pl-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400 focus-visible:ring-blue-600 focus-visible:ring-2 focus-visible:ring-offset-0 transition-all duration-200" required minLength={6} />
+                                        className="pl-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400 focus-visible:ring-[#1E2B58] focus-visible:ring-1 focus-visible:border-[#1E2B58] focus-visible:ring-offset-0 transition-all duration-200 rounded-sm" required minLength={6} />
                                 </div>
                             </div>
                         )}
 
                         {message && (
-                            <div className={`flex items-start gap-2 p-3 rounded-lg text-sm font-medium ${message.type === 'success'
+                            <div className={`flex items-start gap-2 p-3 rounded-sm text-sm font-medium ${message.type === 'success'
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : 'bg-red-50 text-red-700 border border-red-200'
                                 }`}>
@@ -195,7 +199,7 @@ export default function LoginPage() {
                             </div>
                         )}
 
-                        <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold transition-all duration-200 rounded-lg shadow-sm hover:shadow-md" disabled={loading}>
+                        <Button type="submit" className="w-full bg-[#1E2B58] hover:bg-[#151f42] text-white font-semibold transition-all duration-200 rounded-sm shadow-[0_4px_14px_0_rgba(30,43,88,0.39)] hover:shadow-[0_6px_20px_rgba(30,43,88,0.23)] hover:animate-pulse-interlock mt-4" disabled={loading}>
                             {loading ? (
                                 <span className="flex items-center gap-2">
                                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -210,16 +214,16 @@ export default function LoginPage() {
                     </form>
 
                     <div className="mt-6 text-center">
-                        <button type="button" onClick={switchMode} className="text-sm font-medium text-slate-500 hover:text-blue-700 transition-colors">
+                        <button type="button" onClick={switchMode} className="text-sm font-medium text-slate-500 hover:text-[#C62026] transition-colors">
                             {mode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
                         </button>
                     </div>
 
                     <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col gap-2">
                         <p className="text-xs text-center text-slate-500">
-                            🔒 Only <span className="text-slate-600 font-semibold">@{allowedDomain}</span> emails are accepted. Secured by Firebase Authentication.
+                            🔒 Only <span className="text-[#1E2B58] font-bold">@{allowedDomain}</span> emails are accepted. Secured by Firebase.
                         </p>
-                        <button type="button" onClick={() => router.push('/admin-login')} className="text-xs text-slate-400 hover:text-blue-600 transition-colors mt-2">
+                        <button type="button" onClick={() => router.push('/admin-login')} className="text-xs text-slate-400 hover:text-[#C62026] transition-colors mt-2">
                             Admin Portal Access
                         </button>
                     </div>

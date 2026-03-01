@@ -3,9 +3,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
-    Github, Linkedin, Code2, Award, GraduationCap, ArrowLeft, Mail, Briefcase
+    Github, Linkedin, Code2, Award, GraduationCap, ArrowLeft, Mail, Briefcase, Fingerprint, Sparkles, Binary
 } from 'lucide-react'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export default async function ProfileViewPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -19,12 +20,15 @@ export default async function ProfileViewPage({ params }: { params: Promise<{ id
 
     if (!profile) {
         return (
-            <div className="max-w-2xl mx-auto px-4 py-16 text-center font-sans">
-                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-12 shadow-sm">
-                    <h2 className="text-xl font-bold text-slate-700 mb-2">Profile not found</h2>
-                    <p className="text-slate-500 mb-6">The user you are looking for does not exist or has been removed.</p>
-                    <Link href="/dashboard" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors font-medium shadow-sm">
-                        <ArrowLeft className="w-4 h-4" /> Return to Dashboard
+            <div className="max-w-2xl mx-auto px-4 py-32 text-center animate-slide-in">
+                <div className="bg-white border-[1.5px] border-slate-200 rounded-sm p-12 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rotate-45 translate-x-16 -translate-y-16" />
+                    <h2 className="text-2xl font-black text-[#1E2B58] tracking-tighter uppercase mb-2">Subject Unavailable</h2>
+                    <p className="text-slate-500 font-medium mb-8 uppercase tracking-widest text-[10px]">The requested identity token does not exist in the Genie core</p>
+                    <Link href="/dashboard">
+                        <Button className="bg-[#1E2B58] hover:bg-[#151f42] text-white px-8 h-12 rounded-sm uppercase font-black tracking-widest text-xs">
+                            Return to Core
+                        </Button>
                     </Link>
                 </div>
             </div>
@@ -36,103 +40,157 @@ export default async function ProfileViewPage({ params }: { params: Promise<{ id
         : profile.email[0].toUpperCase()
 
     const socialLinks = [
-        { url: profile.github_url, icon: Github, label: 'GitHub', color: 'text-slate-700 hover:text-black hover:bg-slate-200 ring-slate-200' },
-        { url: profile.linkedin_url, icon: Linkedin, label: 'LinkedIn', color: 'text-blue-600 hover:text-blue-800 hover:bg-blue-100 ring-blue-100' },
-        { url: profile.leetcode_url, icon: Code2, label: 'LeetCode', color: 'text-amber-500 hover:text-amber-600 hover:bg-amber-100 ring-amber-100' },
-        { url: profile.hackerrank_url, icon: Award, label: 'HackerRank', color: 'text-emerald-500 hover:text-emerald-700 hover:bg-emerald-100 ring-emerald-100' },
+        { url: profile.github_url, icon: Github, label: 'GitHub', color: 'text-slate-700 hover:text-black' },
+        { url: profile.linkedin_url, icon: Linkedin, label: 'LinkedIn', color: 'text-blue-600 hover:text-blue-800' },
+        { url: profile.leetcode_url, icon: Code2, label: 'LeetCode', color: 'text-amber-500 hover:text-amber-600' },
+        { url: profile.hackerrank_url, icon: Award, label: 'HackerRank', color: 'text-emerald-500 hover:text-emerald-700' },
     ].filter(l => l.url)
 
     return (
-        <div className="max-w-2xl mx-auto px-4 py-8 font-sans">
-            <Link href="/dashboard" className="inline-flex flex-row items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600 mb-6 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50">
-                <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+        <div className="max-w-4xl mx-auto px-1 py-10 animate-slide-in">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-[#C62026] mb-10 transition-all px-4 py-2 border border-slate-200 bg-white rounded-sm">
+                <ArrowLeft className="w-3.5 h-3.5" /> Synchronize Dashboard
             </Link>
 
-            <Card className="bg-white border-slate-200 overflow-hidden shadow-sm rounded-3xl">
-                {/* Header gradient */}
-                <div className="h-36 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 relative">
-                    {profile.role === 'admin' && (
-                        <div className="absolute top-4 right-4">
-                            <Badge className="bg-white/20 hover:bg-white/30 text-white border-white/30 shadow-sm backdrop-blur-md px-3 font-semibold tracking-wide uppercase text-[10px]">Staff / Admin</Badge>
-                        </div>
-                    )}
-                </div>
-
-                <CardContent className="relative pt-0 px-8 pb-10 flex flex-col items-center text-center">
-                    {/* Avatar */}
-                    <div className="relative -mt-20 mb-5">
-                        <Avatar className="w-36 h-36 border-4 border-white shadow-md ring-4 ring-blue-100 bg-white">
-                            <AvatarImage src={profile.avatar_url} alt={profile.display_name || 'User'} className="object-cover" />
-                            <AvatarFallback className="bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 text-4xl font-bold">
-                                {initials}
-                            </AvatarFallback>
-                        </Avatar>
-                    </div>
-
-                    <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-1">
-                        {profile.display_name || profile.email.split('@')[0]}
-                    </h1>
-
-                    {(profile.branch || profile.year_of_study) && (
-                        <div className="flex items-center justify-center gap-2 mb-4 bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100">
-                            <GraduationCap className="w-4 h-4 text-blue-500" />
-                            <span className="text-sm font-semibold text-slate-600">
-                                {profile.branch && `${profile.branch}`}
-                                {profile.branch && profile.year_of_study && <span className="text-slate-300 mx-1.5">|</span>}
-                                {profile.year_of_study && `Year ${profile.year_of_study}`}
-                            </span>
-                        </div>
-                    )}
-
-                    <div className="flex flex-col gap-2 w-full max-w-sm mx-auto mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <div className="flex items-center justify-center gap-2.5 text-sm text-slate-600 font-medium bg-white py-1.5 px-3 rounded-lg shadow-sm border border-slate-100">
-                            <Mail className="w-4 h-4 text-slate-400 shrink-0" />
-                            <span className="truncate">{profile.email}</span>
-                        </div>
-                        {profile.professional_email && (
-                            <div className="flex items-center justify-center gap-2.5 text-sm text-blue-700 font-medium bg-blue-50 py-1.5 px-3 rounded-lg shadow-sm border border-blue-100">
-                                <Briefcase className="w-4 h-4 text-blue-500 shrink-0" />
-                                <span className="truncate">{profile.professional_email}</span>
+            <div className="px-4">
+                <Card className="bg-white border-[1.5px] border-slate-200 overflow-hidden shadow-none rounded-sm relative">
+                    {/* Header Banner */}
+                    <div className="h-40 bg-[#1E2B58] relative overflow-hidden">
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
+                        {profile.role === 'admin' && (
+                            <div className="absolute top-6 right-6">
+                                <Badge className="bg-[#C62026] text-white border-none px-4 py-1.5 font-black tracking-[0.2em] uppercase text-[9px] rounded-sm shadow-xl">
+                                    Administrative Overseer
+                                </Badge>
                             </div>
                         )}
+                        <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-[#1E2B58] to-transparent" />
                     </div>
 
-                    {profile.bio ? (
-                        <div className="w-full text-center">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">About Me</h3>
-                            <p className="text-slate-600 text-[15px] leading-relaxed max-w-lg mx-auto whitespace-pre-wrap font-medium">{profile.bio}</p>
-                        </div>
-                    ) : (
-                        <div className="w-full text-center mb-2">
-                            <p className="text-slate-400 text-sm italic">This student hasn&apos;t written a bio yet.</p>
-                        </div>
-                    )}
+                    <CardContent className="relative pt-0 px-8 pb-12">
+                        {/* Profile Identity Core */}
+                        <div className="flex flex-col md:flex-row items-center md:items-end gap-8 -mt-16 mb-10">
+                            <div className="relative">
+                                <Avatar className="w-40 h-40 border-8 border-white shadow-2xl rounded-sm">
+                                    <AvatarImage src={profile.avatar_url} alt={profile.display_name || 'User'} className="object-cover" />
+                                    <AvatarFallback className="bg-slate-50 text-[#1E2B58] text-5xl font-black uppercase rounded-none">
+                                        {initials}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-[#C62026] rounded-sm flex items-center justify-center shadow-lg border-4 border-white">
+                                    <Fingerprint className="w-4 h-4 text-white" />
+                                </div>
+                            </div>
 
-                    {/* Social Links as Icon Buttons */}
-                    {socialLinks.length > 0 && (
-                        <div className="w-full mt-8 pt-8 border-t border-slate-100">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Connect</h3>
-                            <div className="flex flex-wrap justify-center gap-4">
-                                {socialLinks.map(link => {
-                                    const Icon = link.icon
-                                    return (
-                                        <a
-                                            key={link.label}
-                                            href={link.url!}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            title={link.label}
-                                            className={`w-12 h-12 flex flex-col items-center justify-center rounded-full bg-slate-50 ring-1 shadow-sm transition-all duration-300 transform hover:scale-110 hover:shadow-md ${link.color}`}
-                                        >
-                                            <Icon className="w-5 h-5" />
-                                        </a>
-                                    )
-                                })}
+                            <div className="flex-1 text-center md:text-left pb-2">
+                                <div className="flex items-center justify-center md:justify-start gap-2 mb-2 text-[#C62026] font-bold text-xs uppercase tracking-[0.2em]">
+                                    <div className="w-6 h-px bg-[#C62026]" />
+                                    Genie Registered Entity
+                                </div>
+                                <h1 className="text-4xl font-black text-[#1E2B58] tracking-tighter uppercase leading-tight mb-2">
+                                    {profile.display_name || profile.email.split('@')[0]}
+                                </h1>
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                                    <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-sm">
+                                        <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
+                                        <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                                            {profile.branch || 'Independent Sector'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-sm">
+                                        <Binary className="w-3.5 h-3.5 text-slate-400" />
+                                        <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                                            Level {profile.year_of_study || '?'} Academic
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            {/* Mission Narrative */}
+                            <div className="lg:col-span-7 space-y-8">
+                                <div className="space-y-4">
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#C62026] flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 bg-[#C62026] rounded-full" />
+                                        Core Objectives & Narrative
+                                    </h3>
+                                    <p className="text-base font-medium text-slate-500 leading-relaxed border-l-2 border-slate-100 pl-6 italic">
+                                        {profile.bio || "This entity has not yet established a personal mission narrative within the Genie core system. Operational data remains standard."}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4 pt-8 border-t border-slate-50">
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#C62026] flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 bg-[#C62026] rounded-full" />
+                                        Neutral Communication Nodes
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="bg-slate-50 border border-slate-200 p-4 rounded-sm flex items-center gap-4 group hover:border-[#1E2B58] transition-all">
+                                            <Mail className="w-4 h-4 text-slate-300 group-hover:text-[#1E2B58]" />
+                                            <div className="min-w-0">
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Standard Node</p>
+                                                <p className="text-xs font-bold text-[#1E2B58] truncate">{profile.email}</p>
+                                            </div>
+                                        </div>
+                                        {profile.professional_email && (
+                                            <div className="bg-slate-50 border border-slate-200 p-4 rounded-sm flex items-center gap-4 group hover:border-[#C62026] transition-all">
+                                                <Briefcase className="w-4 h-4 text-slate-300 group-hover:text-[#C62026]" />
+                                                <div className="min-w-0">
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Enterprise Link</p>
+                                                    <p className="text-xs font-bold text-[#1E2B58] truncate">{profile.professional_email}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Digital Signatures / Socials */}
+                            <div className="lg:col-span-5 space-y-8">
+                                <div className="bg-[#1E2B58]/5 border-[1.5px] border-[#1E2B58]/10 p-8 rounded-sm">
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#1E2B58] mb-6 flex items-center gap-2">
+                                        <Sparkles className="w-4 h-4" /> Vector Connectivity
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {socialLinks.length > 0 ? socialLinks.map((link, idx) => (
+                                            <a
+                                                key={idx}
+                                                href={link.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-sm hover:-translate-y-1 hover:shadow-lg transition-all group"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <link.icon className={`w-4 h-4 ${link.color}`} />
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1E2B58] group-hover:text-[#C62026] transition-colors">{link.label}</span>
+                                                </div>
+                                                <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-[#C62026] transition-colors" />
+                                            </a>
+                                        )) : (
+                                            <div className="py-6 text-center border-[1.5px] border-dashed border-slate-200 rounded-sm">
+                                                <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">No Vectors Defined</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="p-8 border-[1.5px] border-dashed border-slate-200 rounded-sm text-center">
+                                    <div className="w-12 h-12 rounded-sm bg-slate-50 mx-auto mb-4 flex items-center justify-center">
+                                        <Award className="w-6 h-6 text-slate-200" />
+                                    </div>
+                                    <p className="text-[10px] font-black uppercase text-slate-300 tracking-[0.2em]">Credential Repository Offline</p>
+                                    <p className="text-[8px] font-medium text-slate-300 mt-1 uppercase tracking-widest leading-relaxed px-4">Detailed academic certifications will be visible in System V3.0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+
+                    {/* Bottom Geometric Accents */}
+                    <div className="absolute bottom-0 right-0 w-32 h-1 bg-[#C62026]" />
+                    <div className="absolute bottom-0 right-32 w-32 h-1 bg-[#1E2B58]" />
+                </Card>
+            </div>
         </div>
     )
-}
+} 

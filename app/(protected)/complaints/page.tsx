@@ -7,12 +7,12 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Plus, AlertTriangle, Clock, CheckCircle2, WrenchIcon } from 'lucide-react'
+import { Plus, AlertTriangle, Clock, CheckCircle2, WrenchIcon, ArrowRight, ShieldAlert } from 'lucide-react'
 
 const statusConfig: Record<string, { label: string; color: string; border: string; icon: React.ElementType }> = {
-    pending: { label: 'Pending', color: 'bg-amber-100 text-amber-700 border-amber-200', border: 'border-l-amber-500', icon: Clock },
-    in_progress: { label: 'In Progress', color: 'bg-blue-100 text-blue-700 border-blue-200', border: 'border-l-blue-500', icon: WrenchIcon },
-    resolved: { label: 'Resolved', color: 'bg-green-100 text-green-700 border-green-200', border: 'border-l-green-600', icon: CheckCircle2 },
+    pending: { label: 'Pending', color: 'bg-amber-50 text-amber-700 border-amber-100', border: 'border-l-amber-500', icon: Clock },
+    in_progress: { label: 'In Progress', color: 'bg-[#1E2B58]/5 text-[#1E2B58] border-[#1E2B58]/10', border: 'border-l-[#1E2B58]', icon: WrenchIcon },
+    resolved: { label: 'Resolved', color: 'bg-emerald-50 text-emerald-700 border-emerald-100', border: 'border-l-emerald-600', icon: CheckCircle2 },
 }
 
 interface Complaint {
@@ -47,102 +47,109 @@ export default function ComplaintsPage() {
     }
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-8 font-sans">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="max-w-5xl mx-auto px-1 py-8 animate-slide-in">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4 mb-10">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <div className="bg-red-100 p-2 rounded-lg">
-                            <AlertTriangle className="w-6 h-6 text-red-600" />
-                        </div>
-                        My Complaints
+                    <div className="flex items-center gap-2 mb-2 text-[#C62026] font-bold text-xs uppercase tracking-[0.2em]">
+                        <div className="w-8 h-px bg-[#C62026]" />
+                        Operations Feedback
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-black text-[#1E2B58] tracking-tighter uppercase">
+                        Infrastructure <span className="text-[#C62026]">Log</span>
                     </h1>
-                    <p className="text-sm text-slate-500 mt-2">Track your infrastructure complaints and maintenance requests</p>
                 </div>
                 <Link href="/complaints/new">
-                    <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-sm transition-all duration-200 ease-in-out hover:shadow-md hover:scale-105 rounded-xl">
-                        <Plus className="w-4 h-4 mr-2" /> New Complaint
+                    <Button className="bg-[#1E2B58] hover:bg-[#151f42] text-white px-8 h-14 rounded-sm shadow-xl hover:animate-pulse-interlock flex items-center gap-2 uppercase font-black tracking-widest text-xs">
+                        <Plus className="w-5 h-5" /> Report Anomaly
                     </Button>
                 </Link>
             </div>
 
-            {loading ? (
-                <div className="space-y-4">
-                    {[1, 2, 3].map(i => (
-                        <Skeleton key={i} className="h-32 w-full bg-slate-100 rounded-xl" />
-                    ))}
-                </div>
-            ) : complaints.length === 0 ? (
-                <Card className="bg-slate-50 border-slate-200 border-dashed border-2 shadow-none">
-                    <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="bg-slate-100 p-4 rounded-full mb-4">
-                            <AlertTriangle className="w-10 h-10 text-slate-400" />
+            {/* Matrix View */}
+            <div className="px-4">
+                {loading ? (
+                    <div className="space-y-3">
+                        {[1, 2, 3].map(i => (
+                            <Skeleton key={i} className="h-32 w-full bg-slate-100 rounded-sm" />
+                        ))}
+                    </div>
+                ) : complaints.length === 0 ? (
+                    <div className="py-20 text-center border-[1.5px] border-dashed border-slate-200 bg-slate-50/50 rounded-sm">
+                        <div className="w-16 h-16 rounded-sm bg-white border border-slate-200 flex items-center justify-center mx-auto mb-6 shadow-sm">
+                            <ShieldAlert className="w-8 h-8 text-slate-300" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-700 mb-2">No complaints yet</h3>
-                        <p className="text-sm text-slate-500 mb-6 max-w-sm">You haven&apos;t submitted any infrastructure complaints. If you notice any issues around campus, report them here.</p>
-                        <Link href="/complaints/new">
-                            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl">Submit Your First Complaint</Button>
-                        </Link>
-                    </CardContent>
-                </Card>
-            ) : (
-                <div className="space-y-4">
-                    {complaints.map(complaint => {
-                        const status = statusConfig[complaint.status] || statusConfig.pending
-                        const StatusIcon = status.icon
-                        return (
-                            <Card key={complaint.id} className={`bg-white border-y border-r border-slate-200 border-l-4 ${status.border} shadow-sm hover:shadow-md transition-all duration-200 ease-in-out group overflow-hidden rounded-xl`}>
-                                <CardContent className="p-5 sm:p-6">
-                                    <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-4">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Badge variant="outline" className="capitalize text-xs text-slate-600 border-slate-300 bg-slate-50 font-medium tracking-wide">
-                                                    {complaint.category.replace('_', ' ')}
-                                                </Badge>
-                                                <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">Room {complaint.room_no}</span>
+                        <h3 className="text-xl font-black text-[#1E2B58] tracking-tighter uppercase mb-2 italic">Clean Registry</h3>
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No active infrastructure complaints in your sector</p>
+                    </div>
+                ) : (
+                    <div className="space-y-px bg-slate-100 border border-slate-200 overflow-hidden">
+                        {complaints.map(complaint => {
+                            const status = statusConfig[complaint.status] || statusConfig.pending
+                            const StatusIcon = status.icon
+                            return (
+                                <Card key={complaint.id} className={`bg-white border-none rounded-none shadow-none group relative overflow-hidden transition-all duration-300 border-l-[6px] ${status.border.replace('border-l-', 'border-')}`}>
+                                    <CardContent className="p-6 sm:p-8">
+                                        <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-6">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <span className="px-2 py-0.5 bg-slate-50 border border-slate-200 text-[10px] font-black uppercase text-slate-400 tracking-widest rounded-sm">
+                                                        {complaint.category.replace('_', ' ')}
+                                                    </span>
+                                                    <div className={`flex items-center gap-1.5 px-3 py-1 border rounded-sm ${status.color}`}>
+                                                        <StatusIcon className="w-3 h-3" />
+                                                        <span className="text-[10px] font-black uppercase tracking-widest">{status.label}</span>
+                                                    </div>
+                                                </div>
+
+                                                <h3 className="text-lg font-black text-[#1E2B58] tracking-tight uppercase group-hover:text-[#C62026] transition-colors mb-2">
+                                                    Room {complaint.room_no} • Internal Log
+                                                </h3>
+                                                <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-3xl">
+                                                    {complaint.description}
+                                                </p>
                                             </div>
-                                            <p className="text-base text-slate-800 line-clamp-2 md:line-clamp-none font-medium mt-1 leading-relaxed">{complaint.description}</p>
-                                            <p className="text-xs text-slate-400 mt-2 font-medium">
-                                                Submitted on {new Date(complaint.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                            </p>
 
-                                            {complaint.admin_notes && (
-                                                <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                                        <img src="/anurag-logo.png" alt="Admin" className="w-3.5 h-3.5 object-contain opacity-60" />
-                                                        Admin Response
-                                                    </p>
-                                                    <p className="text-sm text-slate-700 font-medium">{complaint.admin_notes}</p>
-                                                </div>
-                                            )}
-
-                                            {(complaint.image_url || complaint.resolution_image_url) && (
-                                                <div className="mt-5 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                                                    {complaint.image_url && (
-                                                        <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative group-hover:border-slate-300 transition-colors">
-                                                            <img src={complaint.image_url} alt="Issue" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                                                            <div className="absolute inset-x-0 bottom-0 bg-slate-900/70 text-[10px] sm:text-xs text-center text-white py-1 font-medium backdrop-blur-sm">Reported Issue</div>
-                                                        </div>
-                                                    )}
-                                                    {complaint.resolution_image_url && (
-                                                        <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-xl overflow-hidden bg-green-50 border border-green-200 relative group-hover:border-green-300 transition-colors">
-                                                            <img src={complaint.resolution_image_url} alt="Resolution" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                                                            <div className="absolute inset-x-0 bottom-0 bg-green-700/80 text-[10px] sm:text-xs text-center text-white py-1 font-medium backdrop-blur-sm">Resolution</div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
+                                            <div className="flex flex-col items-end gap-4 shrink-0">
+                                                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                                                    {new Date(complaint.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </span>
+                                                <Link href={`/complaints/${complaint.id}`}>
+                                                    <Button variant="outline" className="h-10 px-6 rounded-sm border-slate-200 text-[#1E2B58] hover:border-[#C62026] hover:text-[#C62026] uppercase font-black tracking-widest text-[10px]">
+                                                        Details <ArrowRight className="w-3 h-3 ml-2" />
+                                                    </Button>
+                                                </Link>
+                                            </div>
                                         </div>
-                                        <Badge className={`${status.color} border shrink-0 py-1 px-2.5 font-semibold text-xs rounded-full shadow-sm sm:self-start w-fit mt-2 sm:mt-0`}>
-                                            <StatusIcon className="w-3.5 h-3.5 mr-1.5" />
-                                            {status.label}
-                                        </Badge>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )
-                    })}
+                                    </CardContent>
+
+                                    {/* Geometric Hover Accent */}
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 translate-x-12 -translate-y-12 rotate-45 group-hover:scale-110 transition-transform duration-500 pointer-events-none opacity-50" />
+                                </Card>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
+
+            {/* System Note */}
+            <div className="mt-12 px-4">
+                <div className="bg-[#1E2B58] text-white p-6 rounded-sm flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-sm bg-[#C62026] flex items-center justify-center shadow-lg">
+                            <WrenchIcon className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-black uppercase tracking-[0.2em]">Maintenance Sync Active</p>
+                            <p className="text-[10px] font-medium text-blue-200 mt-1 uppercase tracking-widest">All reports are routed to administration core</p>
+                        </div>
+                    </div>
+                    <div className="hidden md:block w-px h-8 bg-white/10" />
+                    <div className="hidden md:block">
+                        <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest text-right">Anurag University • System V2.4</p>
+                    </div>
                 </div>
-            )}
+            </div>
         </div>
     )
-}
+} 

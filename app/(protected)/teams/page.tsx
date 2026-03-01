@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Users, Plus, Calendar, Globe, Search, Flame } from 'lucide-react'
+import { Users, Plus, Calendar, Globe, Search, Flame, ArrowRight, Target, Briefcase } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 interface Team {
@@ -56,121 +56,126 @@ export default function TeamsPage() {
     })
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8 font-sans">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="max-w-7xl mx-auto px-1 py-8 animate-slide-in">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4 mb-10">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <div className="bg-indigo-100 p-2 rounded-lg">
-                            <Users className="w-6 h-6 text-indigo-600" />
-                        </div>
-                        Hackathon Teams
+                    <div className="flex items-center gap-2 mb-2 text-[#C62026] font-bold text-xs uppercase tracking-[0.2em]">
+                        <div className="w-8 h-px bg-[#C62026]" />
+                        Collaboration Core
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-black text-[#1E2B58] tracking-tighter uppercase">
+                        Hackathon <span className="text-[#C62026]">Teams</span>
                     </h1>
-                    <p className="text-base text-slate-500 mt-2">Find teammates or post your own listing for upcoming hackathons.</p>
                 </div>
                 <Link href="/teams/new">
-                    <Button className="bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white shadow-sm transition-all duration-200 ease-in-out hover:shadow-md hover:scale-105 rounded-xl">
-                        <Plus className="w-4 h-4 mr-2" /> Create Team
+                    <Button className="bg-[#1E2B58] hover:bg-[#151f42] text-white px-8 h-14 rounded-sm shadow-xl hover:animate-pulse-interlock flex items-center gap-2 uppercase font-black tracking-widest text-xs">
+                        <Plus className="w-5 h-5" /> Assemble Squad
                     </Button>
                 </Link>
             </div>
 
-            {/* Search */}
-            <div className="relative mb-8 max-w-xl">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    placeholder="Search by hackathon name, required skill..."
-                    className="pl-12 py-6 rounded-xl bg-white border-slate-200 text-slate-800 placeholder:text-slate-400 shadow-sm focus-visible:ring-indigo-600 focus-visible:border-indigo-600 transition-all text-base"
-                />
+            {/* Search Matrix */}
+            <div className="px-4 mb-10">
+                <div className="relative max-w-2xl group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E2B58] transition-colors" />
+                    <Input
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Filter by hackathon, skill, or project scope..."
+                        className="pl-12 py-7 rounded-sm border-[1.5px] border-slate-200 bg-white text-[#1E2B58] placeholder:text-slate-400 shadow-sm focus-visible:ring-[#1E2B58] focus-visible:border-[#1E2B58] transition-all text-base font-medium"
+                    />
+                </div>
             </div>
 
-            {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3, 4, 5, 6].map(i => (
-                        <Skeleton key={i} className="h-56 bg-slate-100 rounded-2xl" />
-                    ))}
-                </div>
-            ) : filtered.length === 0 ? (
-                <Card className="bg-slate-50 border-slate-200 border-dashed border-2 shadow-none">
-                    <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="bg-indigo-100 p-4 rounded-full mb-4">
-                            <Users className="w-10 h-10 text-indigo-500" />
+            {/* Teams Grid */}
+            <div className="px-4">
+                {loading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <Skeleton key={i} className="h-64 bg-slate-100 rounded-sm" />
+                        ))}
+                    </div>
+                ) : filtered.length === 0 ? (
+                    <div className="py-20 text-center border-[1.5px] border-dashed border-slate-200 bg-slate-50/50 rounded-sm">
+                        <div className="w-16 h-16 rounded-sm bg-white border border-slate-200 flex items-center justify-center mx-auto mb-6 shadow-sm">
+                            <Users className="w-8 h-8 text-slate-300" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-700 mb-2">No teams found</h3>
-                        <p className="text-sm text-slate-500 mb-6 max-w-sm">Be the first to create a team listing and find the perfect teammates!</p>
-                        <Link href="/teams/new">
-                            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">Create a Team</Button>
-                        </Link>
-                    </CardContent>
-                </Card>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filtered.map(team => {
-                        const isUrgent = team.team_size_needed >= 3
-
-                        return (
-                            <Link key={team.id} href={`/teams/${team.id}`} className="group h-full block">
-                                <Card className={`h-full bg-white transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md flex flex-col rounded-2xl overflow-hidden ${isUrgent
-                                        ? 'border-2 border-red-400 shadow-sm'
-                                        : 'border border-slate-200 shadow-sm hover:border-indigo-300'
-                                    }`}>
-                                    <CardContent className="p-6 flex-1 flex flex-col relative">
-                                        {isUrgent && (
-                                            <div className="absolute top-0 right-6 -translate-y-1/2 bg-red-500 text-white text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                                                <Flame className="w-3 h-3" /> Urgent
-                                            </div>
-                                        )}
-                                        <div className="flex items-start justify-between mb-4 gap-4 mt-2 sm:mt-0">
-                                            <h3 className="font-bold text-slate-800 text-lg leading-tight line-clamp-2">{team.hackathon_name}</h3>
-                                            <Badge variant="outline" className={`shrink-0 border bg-white ${isUrgent ? 'text-red-700 border-red-200' : 'text-indigo-700 border-indigo-200'}`}>
-                                                {team.team_size_needed} needed
-                                            </Badge>
-                                        </div>
-
-                                        <div className="flex-1 min-h-0 mb-5">
-                                            <p className="text-sm text-slate-600 line-clamp-3 leading-relaxed">{team.description}</p>
-                                        </div>
-
-                                        {team.required_skills && team.required_skills.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 mb-5">
-                                                {team.required_skills.map(skill => (
-                                                    <Badge key={skill} className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-                                                        {skill}
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        <div className="flex items-center flex-wrap gap-y-2 gap-x-4 text-xs text-slate-500 font-medium mt-auto pt-4 border-t border-slate-100">
-                                            {team.event_date && (
-                                                <span className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                                    {new Date(team.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                                                </span>
-                                            )}
-                                            {team.event_url && (
-                                                <span className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 group-hover:text-blue-600 transition-colors">
-                                                    <Globe className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500" />
-                                                    Event Link
-                                                </span>
-                                            )}
-                                            <div className="w-full flex items-center gap-2 mt-1">
-                                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] text-white font-bold shrink-0">
-                                                    {(team.profiles?.display_name || team.profiles?.email || 'U')[0].toUpperCase()}
+                        <h3 className="text-xl font-black text-[#1E2B58] tracking-tighter uppercase mb-2 italic">No Squads Assembled</h3>
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Initialize a new team or adjust filter parameters</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 bg-slate-100 p-px border border-slate-200 overflow-hidden">
+                        {filtered.map(team => (
+                            <Link key={team.id} href={`/teams/${team.id}`}>
+                                <Card className="h-full bg-white border-none rounded-none shadow-none group relative overflow-hidden transition-all duration-300 hover:z-10 hover:shadow-[0_10px_40px_rgba(30,43,88,0.12)]">
+                                    <CardContent className="p-8 flex flex-col h-full justify-between">
+                                        <div>
+                                            <div className="flex justify-between items-start mb-6">
+                                                <div className="flex items-center gap-2 px-3 py-1 bg-red-50 border border-red-100 rounded-sm">
+                                                    <Flame className="w-3.5 h-3.5 text-[#C62026]" />
+                                                    <span className="text-[9px] font-black uppercase text-[#C62026] tracking-widest">Recruiting</span>
                                                 </div>
-                                                <span className="truncate">
-                                                    by {team.profiles?.display_name || team.profiles?.email?.split('@')[0]}
-                                                </span>
+                                                <div className="flex items-center gap-1.5 text-slate-300 group-hover:text-[#C62026] transition-colors">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest">Details</span>
+                                                    <ArrowRight className="w-4 h-4" />
+                                                </div>
+                                            </div>
+
+                                            <h3 className="text-xl font-black text-[#1E2B58] tracking-tighter uppercase mb-4 group-hover:text-[#C62026] transition-colors line-clamp-2">
+                                                {team.hackathon_name}
+                                            </h3>
+
+                                            <div className="space-y-3 mb-6">
+                                                <div className="flex items-center gap-3 text-slate-400 group-hover:text-slate-600 transition-colors">
+                                                    <Calendar className="w-4 h-4" />
+                                                    <span className="text-xs font-bold uppercase tracking-wide">
+                                                        {team.event_date ? new Date(team.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date TBD'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-slate-400 group-hover:text-slate-600 transition-colors">
+                                                    <Target className="w-4 h-4" />
+                                                    <span className="text-xs font-bold uppercase tracking-wide">
+                                                        {team.team_size_needed} Slots Available
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-1 mb-8">
+                                                {team.required_skills?.slice(0, 3).map((skill, si) => (
+                                                    <span key={si} className="px-2 py-1 bg-slate-50 border border-slate-200 text-[9px] font-black uppercase text-slate-500 tracking-widest rounded-sm">
+                                                        {skill}
+                                                    </span>
+                                                ))}
+                                                {(team.required_skills?.length || 0) > 3 && (
+                                                    <span className="px-2 py-1 bg-slate-50 border border-slate-200 text-[9px] font-black uppercase text-slate-300 tracking-widest rounded-sm">
+                                                        +{(team.required_skills?.length || 0) - 3}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-auto pt-6 border-t border-slate-50 flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-sm bg-[#1E2B58] flex items-center justify-center text-white text-[10px] font-black uppercase">
+                                                {team.profiles?.display_name?.charAt(0) || team.profiles?.email.charAt(0) || 'U'}
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-[#1E2B58] uppercase tracking-widest leading-none mb-1">
+                                                    {team.profiles?.display_name || 'Anonymous Architect'}
+                                                </p>
+                                                <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Lead Coordinator</p>
                                             </div>
                                         </div>
                                     </CardContent>
+
+                                    {/* Geometric Hover Accent */}
+                                    <div className="absolute top-0 left-0 w-full h-[2px] bg-[#C62026] scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
                                 </Card>
                             </Link>
-                        )
-                    })}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     )
-}
+} 

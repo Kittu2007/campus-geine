@@ -51,8 +51,8 @@ export function Navbar() {
 
     return (
         <>
-            {/* Desktop Nav */}
-            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-md border-b border-slate-200 z-50 hidden lg:flex items-center px-6 transition-all duration-200 ease-in-out shadow-sm">
+            {/* Desktop Nav (Disabled in favor of Sidebar) */}
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-md border-b border-slate-200 z-50 hidden items-center px-6 transition-all duration-200 ease-in-out shadow-sm">
                 <Link href="/dashboard" className="flex items-center gap-2 mr-8">
                     <img src="/anurag-logo.png" alt="Anurag Logo" className="w-8 h-8 object-contain" />
                     <span className="font-bold text-lg text-slate-800">Campus Genie</span>
