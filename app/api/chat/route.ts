@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 import campusInfo from '@/lib/university-context.json'
 
 // Basic in-memory rate limiting (Note: resets on serverless cold starts)
@@ -10,7 +10,7 @@ const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-    console.log('[chat] --- NEW REQUEST INITIATED (Gemini) ---')
+    console.log('[chat] --- NEW REQUEST INITIATED (Groq) ---')
 
     // 1. IP Rate Limiting (Basic)
     const ip = request.headers.get('x-forwarded-for') || 'unknown-ip'
@@ -35,24 +35,17 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. API Key Validation
-    const rawKey = process.env.GEMINI_API_KEY
+    const rawKey = process.env.GROQ_API_KEY
     if (!rawKey) {
-        console.error('[chat-error] GEMINI_API_KEY is missing or undefined.')
+        console.error('[chat-error] GROQ_API_KEY is missing or undefined.')
         return NextResponse.json(
             { success: false, message: '', error: 'AI service configuration error. Please contact support.' },
             { status: 500 }
         )
     }
 
-    // Initialize Gemini client
-    const genAI = new GoogleGenerativeAI(rawKey.trim())
-    const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
-        generationConfig: {
-            maxOutputTokens: 500,
-            temperature: 0.7,
-        }
-    })
+    // Initialize Groq client
+    const groq = new Groq({ apiKey: rawKey.trim() })
 
     try {
         // 3. Body Validation
@@ -67,10 +60,10 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // 4. Construction of context & history
+        // 4. Memory Limiter (System + Last turns + Current Message)
         const systemPrompt = `You are Campus Buddy, an AI assistant for Anurag University. 
 Answer clearly and professionally. 
-If information is not available in the provided context, say you do not have access to that specific data but suggest where they might find it (e.g., specific department or official website).
+If information is not available in the provided context, say you do not have access to that specific data.
 Do not hallucinate facts. 
 Keep answers concise and helpful (under 150 words).
 
@@ -79,32 +72,43 @@ ${JSON.stringify(campusInfo, null, 2)}`
 
         const validHistory = Array.isArray(history) ? history : []
 
-        // Convert history to Gemini format (user -> user, assistant -> model)
-        const chatHistory = validHistory.slice(-6).map((h: any) => ({
-            role: h.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: typeof h.content === 'string' ? h.content : '' }],
+        // Take last 6 elements
+        const trimmedHistory = validHistory.slice(-6).map((h: any) => ({
+            role: h.role === 'assistant' ? 'assistant' as const : 'user' as const,
+            content: typeof h.content === 'string' ? h.content : '',
         }))
 
-        // 5. Execute Gemini Call
-        const chat = model.startChat({
-            history: chatHistory,
-            systemInstruction: systemPrompt,
+        // Final payload array
+        const chatMessages = [
+            { role: 'system' as const, content: systemPrompt },
+            ...trimmedHistory,
+            { role: 'user' as const, content: message },
+        ]
+
+        console.log(`[chat] Sending request to Groq API (llama-3.3-70b-versatile).`)
+
+        // 5. Execute Groq Call
+        const completion = await groq.chat.completions.create({
+            messages: chatMessages,
+            model: "llama-3.3-70b-versatile",
+            max_completion_tokens: 500,
+            temperature: 0.7,
         })
 
-        const result = await chat.sendMessage(message)
-        const responseText = result.response.text()
+        // 6. Safe Extraction
+        const extractedText = completion.choices?.[0]?.message?.content
 
-        if (!responseText) {
-            console.error('[chat-error] Empty response from Gemini.')
+        if (!extractedText) {
+            console.error('[chat-error] Empty response from Groq.')
             return NextResponse.json(
                 { success: false, message: '', error: 'The AI generated an empty response.' },
                 { status: 500 }
             )
         }
 
-        // 6. Return Structured JSON Success
+        // 7. Return Structured JSON Success
         return NextResponse.json(
-            { success: true, message: responseText },
+            { success: true, message: extractedText },
             {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
@@ -115,14 +119,6 @@ ${JSON.stringify(campusInfo, null, 2)}`
         console.error('[chat-error] Caught Exception in Backend:', error)
 
         const errorMessage = error.message || String(error)
-
-        // Handle specific Gemini errors if needed
-        if (errorMessage.includes('safety') || errorMessage.includes('blocked')) {
-            return NextResponse.json(
-                { success: false, message: '', error: 'The request was blocked by safety filters. Please try rephrasing.' },
-                { status: 400 }
-            )
-        }
 
         return NextResponse.json(
             { success: false, message: '', error: 'An internal server error occurred while processing the request.' },
