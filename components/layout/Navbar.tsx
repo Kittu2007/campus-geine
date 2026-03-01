@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/sheet'
 import {
     MessageSquare, AlertTriangle, BookOpen, Users, User,
-    LogOut, Menu, Home, Shield, GraduationCap,
+    LogOut, Menu, Home, Shield, GraduationCap, Brain,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
@@ -23,6 +23,7 @@ import { createClient } from '@/lib/supabase/client'
 const navLinks = [
     { href: '/dashboard', label: 'Home', icon: Home },
     { href: '/chat', label: 'AI Chat', icon: MessageSquare },
+    { href: '/elin', label: 'ELIN', icon: Brain },
     { href: '/complaints', label: 'Complaints', icon: AlertTriangle },
     { href: '/resources', label: 'Resources', icon: BookOpen },
     { href: '/teams', label: 'Teams', icon: Users },
@@ -51,7 +52,7 @@ export function Navbar() {
     return (
         <>
             {/* Desktop Nav */}
-            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-md border-b border-slate-200 z-50 hidden md:flex items-center px-6 transition-all duration-200 ease-in-out shadow-sm">
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/70 backdrop-blur-md border-b border-slate-200 z-50 hidden lg:flex items-center px-6 transition-all duration-200 ease-in-out shadow-sm">
                 <Link href="/dashboard" className="flex items-center gap-2 mr-8">
                     <img src="/anurag-logo.png" alt="Anurag Logo" className="w-8 h-8 object-contain" />
                     <span className="font-bold text-lg text-slate-800">Campus Genie</span>
@@ -64,10 +65,25 @@ export function Navbar() {
                     ].map(link => {
                         const Icon = link.icon
                         const active = pathname === link.href
+                        // Apply custom indigo styling for the ELIN tab
+                        const isElin = link.href === '/elin'
+
+                        let baseClasses = 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ease-in-out '
+
+                        if (active) {
+                            baseClasses += isElin
+                                ? 'bg-indigo-50 text-indigo-700 shadow-sm'
+                                : 'bg-blue-50 text-blue-700 shadow-sm'
+                        } else {
+                            baseClasses += isElin
+                                ? 'text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50/50'
+                                : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
+                        }
+
                         return (
-                            <Link key={link.href} href={link.href}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ease-in-out ${active ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'}`}>
+                            <Link key={link.href} href={link.href} className={baseClasses}>
                                 <Icon className="w-4 h-4" /> {link.label}
+                                {isElin && <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0 h-4 bg-indigo-100/50 text-indigo-700 hover:bg-indigo-100/50">NEW</Badge>}
                             </Link>
                         )
                     })}
@@ -110,7 +126,7 @@ export function Navbar() {
             </nav>
 
             {/* Mobile Top Bar */}
-            <nav className="fixed top-0 left-0 right-0 h-14 bg-white/70 backdrop-blur-md border-b border-slate-200 z-50 flex md:hidden items-center px-4 shadow-sm">
+            <nav className="fixed top-0 left-0 right-0 h-14 bg-white/70 backdrop-blur-md border-b border-slate-200 z-50 flex lg:hidden items-center px-4 shadow-sm">
                 <Link href="/dashboard" className="flex items-center gap-2">
                     <img src="/anurag-logo.png" alt="Anurag Logo" className="w-6 h-6 object-contain" />
                     <span className="font-bold text-slate-800">Campus Genie</span>
@@ -136,18 +152,28 @@ export function Navbar() {
             </nav>
 
             {/* Mobile Bottom Tab Bar */}
-            <div className="fixed bottom-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md border-t border-slate-200 z-50 flex md:hidden items-center justify-around px-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                {[
-                    ...navLinks,
-                    { href: `/profile/${user.uid}`, label: 'Profile', icon: User }
-                ].map(link => {
+            <div className="fixed bottom-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md border-t border-slate-200 z-50 flex lg:hidden items-center justify-around px-1 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                {navLinks.map(link => {
                     const Icon = link.icon
                     const active = pathname === link.href
+                    const isElin = link.href === '/elin'
+
+                    let baseClasses = 'flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all duration-200 ease-in-out '
+
+                    if (active) {
+                        baseClasses += isElin
+                            ? 'text-indigo-700 bg-indigo-50 shadow-sm'
+                            : 'text-blue-700 bg-blue-50 shadow-sm'
+                    } else {
+                        baseClasses += isElin
+                            ? 'text-indigo-500 hover:text-indigo-600'
+                            : 'text-slate-500 hover:text-blue-600'
+                    }
+
                     return (
-                        <Link key={link.href} href={link.href}
-                            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all duration-200 ease-in-out ${active ? 'text-blue-700 bg-blue-50 shadow-sm' : 'text-slate-500 hover:text-blue-600'}`}>
+                        <Link key={link.href} href={link.href} className={baseClasses}>
                             <Icon className="w-5 h-5" />
-                            <span className="text-[10px] font-medium">{link.label}</span>
+                            <span className="text-[9px] font-medium">{link.label}</span>
                         </Link>
                     )
                 })}
