@@ -22,7 +22,7 @@ import { createClient } from '@/lib/supabase/client'
 
 const navLinks = [
     { href: '/dashboard', label: 'Home', icon: Home },
-    { href: '/chat', label: 'AI Chat', icon: MessageSquare },
+    { href: '/chat', label: 'FAQ bot', icon: MessageSquare },
     { href: '/elin', label: 'ELIN', icon: Brain },
     { href: '/complaints', label: 'Complaints', icon: AlertTriangle },
     { href: '/resources', label: 'Resources', icon: BookOpen },
