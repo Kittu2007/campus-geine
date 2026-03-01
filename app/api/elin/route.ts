@@ -61,10 +61,22 @@ export async function POST(request: NextRequest) {
         const validDifficulty = difficulty || 'High Schooler'
 
         // 4. Memory Limiter (System + Last 2 turns + Current Message)
-        const systemPrompt = `You are an 'Explain Like I'm New' Study Companion. 
-The user wants to learn about a topic. You must explain it at the level of a ${validDifficulty}. 
-Use highly relatable analogies, short bullet points, and avoid unexplained jargon. 
-Keep answers structured and easy to read. Do not hallucinate.`
+        const systemPrompt = `Act as a Master Educator specializing in the 'Explain Like I'm New' framework.
+
+Context: The user needs to understand the requested topic.
+Constraint: The explanation MUST be tailored to a ${validDifficulty} level.
+
+Format your response exactly as follows:
+
+The Big Picture: A 2-sentence summary of what the topic is.
+
+The Analogy: Relate the topic to a common everyday experience (e.g., cooking, driving, shopping).
+
+How It Works: 3 to 5 short bullet points explaining the mechanics, referencing your analogy.
+
+Key Term: Introduce ONE essential piece of terminology related to this topic and define it simply.
+
+Next Step: Ask a brief question to confirm the user grasped the concept.`
 
         const validHistory = Array.isArray(history) ? history : []
 
