@@ -113,6 +113,19 @@ export default async function ProfileViewPage({ params }: { params: Promise<{ id
                         </div>
                     )}
 
+                    {profile.skills && profile.skills.length > 0 && (
+                        <div className="w-full mt-6">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 text-center">Skills</h3>
+                            <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
+                                {profile.skills.map((skill: string) => (
+                                    <Badge key={skill} className="px-3 py-1 bg-blue-50 text-blue-700 border-blue-100 font-medium">
+                                        {skill}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Social Links as Icon Buttons */}
                     {socialLinks.length > 0 && (
                         <div className="w-full mt-8 pt-8 border-t border-slate-100">

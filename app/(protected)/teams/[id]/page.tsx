@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { toast } from 'sonner'
 import {
     ArrowLeft, Calendar, Globe, Users, Send, Check, X, Loader2, User
@@ -26,7 +27,12 @@ interface Team {
     status: string
     creator_id: string
     created_at: string
-    profiles: { display_name: string | null; email: string } | null
+    profiles: {
+        id: string;
+        display_name: string | null;
+        email: string;
+        avatar_url: string | null;
+    } | null
 }
 
 interface TeamRequest {
@@ -35,7 +41,12 @@ interface TeamRequest {
     message: string
     status: string
     created_at: string
-    profiles: { display_name: string | null; email: string } | null
+    profiles: {
+        display_name: string | null;
+        email: string;
+        avatar_url: string | null;
+        skills: string[] | null;
+    } | null
 }
 
 export default function TeamDetailPage() {
@@ -60,7 +71,7 @@ export default function TeamDetailPage() {
 
         const { data: teamData } = await supabase
             .from('hackathon_teams')
-            .select('*, profiles:creator_id(display_name, email)')
+            .select('*, profiles:creator_id(id, display_name, email, avatar_url)')
             .eq('id', teamId)
             .single()
 
@@ -82,7 +93,7 @@ export default function TeamDetailPage() {
         if (teamData && firebaseUser && teamData.creator_id === firebaseUser.uid) {
             const { data: reqData } = await supabase
                 .from('team_requests')
-                .select('*, profiles:requester_id(display_name, email)')
+                .select('*, profiles:requester_id(display_name, email, avatar_url, skills)')
                 .eq('team_id', teamId)
                 .order('created_at', { ascending: false })
 
@@ -126,6 +137,28 @@ export default function TeamDetailPage() {
         if (error) {
             toast.error('Failed to update request')
         } else {
+            if (status === 'accepted') {
+                // Add to team_members
+                const { error: memberError } = await supabase
+                    .from('team_members')
+                    .insert({ team_id: teamId, user_id: requests.find(r => r.id === requestId)?.requester_id })
+
+                if (memberError) {
+                    toast.error('Failed to add member to team')
+                } else {
+                    // Decrement team_size_needed
+                    const newSize = Math.max(0, (team?.team_size_needed || 0) - 1)
+                    const { error: updateError } = await supabase
+                        .from('hackathon_teams')
+                        .update({
+                            team_size_needed: newSize,
+                            status: newSize === 0 ? 'closed' : 'open'
+                        })
+                        .eq('id', teamId)
+
+                    if (updateError) toast.error('Failed to update team size')
+                }
+            }
             toast.success(`Request ${status}`)
             fetchTeam()
         }
@@ -194,8 +227,24 @@ export default function TeamDetailPage() {
                         </div>
                     )}
 
-                    <div className="text-xs text-slate-500">
-                        Posted by {team.profiles?.display_name || team.profiles?.email?.split('@')[0]} · {new Date(team.created_at).toLocaleDateString('en-IN')}
+                    <div className="flex items-center gap-3 pt-4 border-t border-slate-700/50">
+                        <Link href={`/profile/${team.creator_id}`} className="flex items-center gap-2 group hover:text-indigo-400 transition-colors">
+                            <Avatar className="w-8 h-8 border border-slate-600 group-hover:border-indigo-500/50 transition-colors">
+                                <AvatarImage src={team.profiles?.avatar_url || ''} />
+                                <AvatarFallback className="bg-slate-700 text-[10px] text-white">
+                                    {(team.profiles?.display_name || team.profiles?.email || 'U')[0].toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="text-xs">
+                                <p className="text-slate-500">Posted by</p>
+                                <p className="font-medium text-slate-300 group-hover:text-indigo-400 transition-colors">
+                                    {team.profiles?.display_name || team.profiles?.email?.split('@')[0]}
+                                </p>
+                            </div>
+                        </Link>
+                        <div className="text-xs text-slate-500 ml-auto">
+                            {new Date(team.created_at).toLocaleDateString('en-IN')}
+                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -246,15 +295,32 @@ export default function TeamDetailPage() {
                             requests.map(req => (
                                 <div key={req.id} className="p-4 rounded-xl bg-slate-700/30 border border-slate-600/30">
                                     <div className="flex items-start justify-between mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <User className="w-4 h-4 text-slate-400" />
-                                            <span className="font-medium text-white text-sm">
-                                                {req.profiles?.display_name || req.profiles?.email?.split('@')[0]}
-                                            </span>
-                                            <Badge variant="outline" className="text-[10px] capitalize">
+                                        <Link href={`/profile/${req.requester_id}`} className="flex items-center gap-2 group/requester hover:text-indigo-400 transition-colors">
+                                            <Avatar className="w-8 h-8 border border-slate-600 group-hover/requester:border-indigo-500/50 transition-all">
+                                                <AvatarImage src={req.profiles?.avatar_url || ''} />
+                                                <AvatarFallback className="bg-slate-600 text-[10px] text-white">
+                                                    {(req.profiles?.display_name || req.profiles?.email || 'U')[0].toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-medium text-white text-sm group-hover/requester:text-indigo-400 transition-colors">
+                                                    {req.profiles?.display_name || req.profiles?.email?.split('@')[0]}
+                                                </p>
+                                                {req.profiles?.skills && req.profiles.skills.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1 mt-0.5">
+                                                        {req.profiles.skills.slice(0, 3).map(s => (
+                                                            <span key={s} className="text-[9px] px-1.5 py-0 bg-slate-800 text-slate-400 rounded-full border border-slate-700">{s}</span>
+                                                        ))}
+                                                        {req.profiles.skills.length > 3 && <span className="text-[9px] text-slate-500">+{req.profiles.skills.length - 3}</span>}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <Badge variant="outline" className={`text-[10px] capitalize ml-2 ${req.status === 'accepted' ? 'text-emerald-400 border-emerald-500/20' :
+                                                req.status === 'rejected' ? 'text-red-400 border-red-500/20' : 'text-amber-400 border-amber-500/20'
+                                                }`}>
                                                 {req.status}
                                             </Badge>
-                                        </div>
+                                        </Link>
                                     </div>
                                     <p className="text-sm text-slate-300 mb-3">{req.message}</p>
                                     {req.status === 'pending' && (

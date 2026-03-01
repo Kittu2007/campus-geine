@@ -7,8 +7,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Users, Plus, Calendar, Globe, Search, Flame } from 'lucide-react'
+import { Users, Plus, Calendar, Globe, Search, Flame, User, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { useAuth } from '@/lib/firebase/AuthContext'
+import { toast } from 'sonner'
 
 interface Team {
     id: string
@@ -28,10 +30,39 @@ export default function TeamsPage() {
     const [teams, setTeams] = useState<Team[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
+    const { user } = useAuth()
+    const [userRequests, setUserRequests] = useState<Record<string, string>>({}) // teamId -> status
+    const [userMemberships, setUserMemberships] = useState<string[]>([]) // array of teamIds
+    const [actionLoading, setActionLoading] = useState<string | null>(null)
 
     useEffect(() => {
         fetchTeams()
-    }, [])
+        if (user) {
+            fetchUserStatus()
+        }
+    }, [user])
+
+    const fetchUserStatus = async () => {
+        const supabase = createClient()
+
+        // Fetch requests
+        const { data: reqs } = await supabase
+            .from('team_requests')
+            .select('team_id, status')
+            .eq('requester_id', user!.uid)
+
+        const reqMap: Record<string, string> = {}
+        reqs?.forEach(r => reqMap[r.team_id] = r.status)
+        setUserRequests(reqMap)
+
+        // Fetch memberships
+        const { data: members } = await supabase
+            .from('team_members')
+            .select('team_id')
+            .eq('user_id', user!.uid)
+
+        setUserMemberships(members?.map(m => m.team_id) || [])
+    }
 
     const fetchTeams = async () => {
         const supabase = createClient()
@@ -108,10 +139,36 @@ export default function TeamsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filtered.map(team => {
                         const isUrgent = team.team_size_needed >= 3
+                        const isCreator = user?.uid === team.creator_id
+                        const requestStatus = userRequests[team.id]
+                        const isMember = userMemberships.includes(team.id)
+
+                        const handleJoinRequest = async (e: React.MouseEvent) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            if (!user) return
+
+                            setActionLoading(team.id)
+                            try {
+                                const supabase = createClient()
+                                const { error } = await supabase.from('team_requests').insert({
+                                    team_id: team.id,
+                                    requester_id: user.uid,
+                                    message: 'I would like to join your team!',
+                                })
+                                if (error) throw error
+                                toast.success('Join request sent!')
+                                fetchUserStatus()
+                            } catch {
+                                toast.error('Failed to send request')
+                            } finally {
+                                setActionLoading(null)
+                            }
+                        }
 
                         return (
-                            <Link key={team.id} href={`/teams/${team.id}`} className="group h-full block">
-                                <Card className={`h-full bg-white transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md flex flex-col rounded-2xl overflow-hidden ${isUrgent
+                            <div key={team.id} className="h-full">
+                                <Card className={`h-full bg-white transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md flex flex-col rounded-2xl overflow-hidden relative ${isUrgent
                                     ? 'border-2 border-red-400 shadow-sm'
                                     : 'border border-slate-200 shadow-sm hover:border-indigo-300'
                                     }`}>
@@ -155,18 +212,52 @@ export default function TeamsPage() {
                                                     Event Link
                                                 </span>
                                             )}
-                                            <div className="w-full flex items-center gap-2 mt-1">
-                                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] text-white font-bold shrink-0">
-                                                    {(team.profiles?.display_name || team.profiles?.email || 'U')[0].toUpperCase()}
-                                                </div>
-                                                <span className="truncate">
-                                                    by {team.profiles?.display_name || team.profiles?.email?.split('@')[0]}
-                                                </span>
+                                            <div className="w-full flex items-center justify-between mt-1">
+                                                <Link
+                                                    href={`/profile/${team.creator_id}`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="flex items-center gap-2 group/author hover:text-indigo-600 transition-colors"
+                                                >
+                                                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] text-white font-bold shrink-0 shadow-sm group-hover/author:scale-110 transition-transform">
+                                                        {(team.profiles?.display_name || team.profiles?.email || 'U')[0].toUpperCase()}
+                                                    </div>
+                                                    <span className="truncate max-w-[100px]">
+                                                        by {team.profiles?.display_name || team.profiles?.email?.split('@')[0]}
+                                                    </span>
+                                                </Link>
+
+                                                {!isCreator && !isMember && !requestStatus && (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={handleJoinRequest}
+                                                        disabled={actionLoading === team.id}
+                                                        className="h-8 px-3 text-[11px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all"
+                                                    >
+                                                        {actionLoading === team.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3 mr-1" />}
+                                                        Join
+                                                    </Button>
+                                                )}
+                                                {requestStatus && (
+                                                    <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-100 capitalize text-[10px]">
+                                                        {requestStatus}
+                                                    </Badge>
+                                                )}
+                                                {isMember && (
+                                                    <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[10px]">
+                                                        Member
+                                                    </Badge>
+                                                )}
+                                                {isCreator && (
+                                                    <Badge variant="secondary" className="bg-slate-50 text-slate-600 border-slate-200 text-[10px]">
+                                                        Owner
+                                                    </Badge>
+                                                )}
                                             </div>
                                         </div>
+                                        <Link href={`/teams/${team.id}`} className="absolute inset-0 z-0" aria-label="View team details" />
                                     </CardContent>
                                 </Card>
-                            </Link>
+                            </div>
                         )
                     })}
                 </div>

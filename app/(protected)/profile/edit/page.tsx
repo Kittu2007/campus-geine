@@ -29,6 +29,7 @@ export default function EditProfilePage() {
         leetcode_url: '',
         hackerrank_url: '',
         professional_email: '',
+        skills: '',
     })
 
     useEffect(() => {
@@ -56,6 +57,7 @@ export default function EditProfilePage() {
                 leetcode_url: data.leetcode_url || '',
                 hackerrank_url: data.hackerrank_url || '',
                 professional_email: data.professional_email || '',
+                skills: (data.skills || []).join(', '),
             })
         }
         setLoading(false)
@@ -81,6 +83,7 @@ export default function EditProfilePage() {
                     leetcode_url: form.leetcode_url || null,
                     hackerrank_url: form.hackerrank_url || null,
                     professional_email: form.professional_email || null,
+                    skills: form.skills.split(',').map(s => s.trim()).filter(s => s.length > 0),
                 })
                 .eq('id', firebaseUser.uid)
 
@@ -163,6 +166,23 @@ export default function EditProfilePage() {
                                     className="bg-slate-50/50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-blue-600 shadow-sm min-h-[100px] resize-none pb-2 leading-relaxed"
                                     maxLength={200}
                                 />
+                            </div>
+                        </div>
+
+                        {/* Skills Section */}
+                        <div className="space-y-5">
+                            <h3 className="text-sm font-bold text-slate-400 tracking-wider uppercase flex items-center gap-2 border-b border-slate-100 pb-2">
+                                <Code2 className="w-4 h-4" /> Professional Skills
+                            </h3>
+                            <div className="space-y-3">
+                                <Label className="text-slate-700 font-semibold">Skills (Comma-separated)</Label>
+                                <Input
+                                    value={form.skills}
+                                    onChange={e => setForm({ ...form, skills: e.target.value })}
+                                    placeholder="e.g., React, TypeScript, Python, UI Design"
+                                    className="bg-slate-50/50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-blue-600 shadow-sm h-11"
+                                />
+                                <p className="text-xs text-slate-500">List your top technical skills to help teammates find you.</p>
                             </div>
                         </div>
 
