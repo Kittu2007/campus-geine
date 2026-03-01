@@ -35,64 +35,85 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-slate-50 overflow-hidden font-sans text-slate-800">
       {/* Hero */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 pt-20">
-        {/* Background effects */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-600/5 rounded-full blur-3xl animate-pulse delay-1000" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-slate-200/20 rounded-full blur-3xl" />
+      <section className="relative min-h-[90vh] flex items-center justify-center px-4 pt-20 overflow-hidden">
+        {/* Background blobs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[140px] animate-pulse delay-700" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-sky-400/5 rounded-full blur-[160px]" />
         </div>
 
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        {/* Dynamic Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.02)_1.5px,transparent_1.5px),linear-gradient(90deg,rgba(37,99,235,0.02)_1.5px,transparent_1.5px)] bg-[size:80px_80px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
 
-        <div className="relative z-10 text-center max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium mb-8 shadow-sm">
-            <Sparkles className="w-4 h-4" />
-            AI-Powered Campus Platform
+        <div className="relative z-10 text-center max-w-5xl mx-auto space-y-10">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/40 backdrop-blur-md border border-white/20 text-blue-700 text-sm font-semibold shadow-xl shadow-blue-500/5 animate-fade-in transition-all hover:bg-white/60 cursor-default group">
+            <Sparkles className="w-4 h-4 text-blue-500 group-hover:rotate-12 transition-transform" />
+            <span className="bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">AI-Powered Campus OS</span>
           </div>
 
-          <div className="mb-6 inline-block relative">
-            <img src="/anurag-logo.png" alt="Anurag Logo" className="w-20 h-20 mx-auto object-contain mb-6" />
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-800">
-              Campus Genie
+          {/* Main Title Area */}
+          <div className="relative group">
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl group-hover:bg-blue-600/20 transition-colors" />
+            <img
+              src="/anurag-logo.png"
+              alt="Anurag Logo"
+              className="w-24 h-24 mx-auto object-contain mb-8 drop-shadow-2xl transition-transform hover:scale-110 duration-500"
+            />
+
+            <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-slate-900 leading-[1.1]">
+              Campus <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-red-600 bg-clip-text text-transparent">Genie</span>
             </h1>
-            {/* Subtle red-blue gradient underline */}
-            <div className="absolute -bottom-4 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 via-indigo-500 to-blue-600 rounded-full opacity-80" />
+
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-slate-200" />
+              <p className="text-lg md:text-xl text-slate-500 font-medium tracking-wide uppercase">Anurag University</p>
+              <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-slate-200" />
+            </div>
           </div>
 
-          <p className="text-xl md:text-2xl text-slate-600 mb-4 max-w-2xl mx-auto mt-8 font-medium">
-            The AI-powered operating system for Anurag University
-          </p>
+          {/* Value Prop */}
+          <div className="space-y-6 max-w-3xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-semibold text-slate-800 leading-tight">
+              The intelligent backbone for modern student life.
+            </h2>
+            <p className="text-lg text-slate-600 leading-relaxed font-normal">
+              Empowering students with <span className="text-blue-600 font-medium">real-time AI support</span>,
+              streamlined <span className="text-red-500 font-medium">complaint tracking</span>, and
+              collaborative <span className="text-indigo-600 font-medium">hackathon team bonding</span>.
+            </p>
+          </div>
 
-          <p className="text-base text-slate-500 mb-10 max-w-xl mx-auto">
-            One platform for AI academic support, infrastructure complaints,
-            and hackathon team discovery.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-4">
             <Link href="/login">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-8 py-6 text-lg shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] transition-all duration-200 ease-in-out hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:scale-105 rounded-xl border border-blue-500"
+                className="relative overflow-hidden group bg-slate-900 hover:bg-slate-800 text-white font-bold px-10 py-7 text-xl shadow-2xl transition-all hover:scale-105 active:scale-95 rounded-2xl"
               >
-                Get Started <ArrowRight className="w-5 h-5 ml-2" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="relative z-10 flex items-center">
+                  Get Started
+                  <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" />
+                </span>
               </Button>
             </Link>
           </div>
 
-          <div className="mt-12 flex items-center justify-center gap-8 text-sm text-slate-500 font-medium">
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-500" />
-              Groq AI
+          {/* Tech stack badges */}
+          <div className="pt-12 flex flex-wrap items-center justify-center gap-6 md:gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+            <div className="flex items-center gap-3">
+              <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
+              <span className="text-sm font-bold tracking-widest uppercase text-slate-600">LLaMA 3.3 Power</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-emerald-500" />
-              Secure Auth
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-emerald-500 fill-emerald-500 shadow-xl" />
+              <span className="text-sm font-bold tracking-widest uppercase text-slate-600">Secure Vault</span>
             </div>
-            <div className="flex items-center gap-2">
-              <img src="/anurag-logo.png" alt="Icon" className="w-4 h-4 object-contain" />
-              Anurag University
+            <div className="flex items-center gap-3">
+              <Users className="w-5 h-5 text-blue-500 fill-blue-50" />
+              <span className="text-sm font-bold tracking-widest uppercase text-slate-600">2000+ Students</span>
             </div>
           </div>
         </div>
