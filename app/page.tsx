@@ -1,4 +1,5 @@
 'use client'
+// UI_DEVOPS_VERSION: 1.0.1 - FORCED_REDEPLOY_GEO_NAVY_RED
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
