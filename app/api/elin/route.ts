@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. API Key Validation
-    const rawKey = process.env.GROQ_API_KEY
+    const rawKey = process.env.ELIN_GROQ_API_KEY
     if (!rawKey) {
-        console.error('[elin-chat-error] GROQ_API_KEY is missing or undefined.')
+        console.error('[elin-chat-error] ELIN_GROQ_API_KEY is missing or undefined.')
         return NextResponse.json(
             { success: false, message: '', error: 'AI service configuration error. Please contact support.' },
             { status: 500 }
