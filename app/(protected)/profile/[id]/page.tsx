@@ -85,11 +85,16 @@ export default async function ProfileViewPage({ params }: { params: Promise<{ id
                     )}
 
                     <div className="flex flex-col gap-2 w-full max-w-sm mx-auto mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <div className="flex items-center justify-center gap-2.5 text-sm text-slate-600 font-medium bg-white py-1.5 px-3 rounded-lg shadow-sm border border-slate-100">
-                            <Mail className="w-4 h-4 text-slate-400 shrink-0" />
-                            <span className="truncate">{profile.email}</span>
-                        </div>
-                        {profile.professional_email && (
+                        {/* Primary Institutional Email (Hide if it's a placeholder) */}
+                        {profile.email && !profile.email.includes('example.com') && !profile.email.includes('internal') && (
+                            <div className="flex items-center justify-center gap-2.5 text-sm text-slate-600 font-medium bg-white py-1.5 px-3 rounded-lg shadow-sm border border-slate-100">
+                                <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                                <span className="truncate">{profile.email}</span>
+                            </div>
+                        )}
+
+                        {/* Professional/Personal Email */}
+                        {profile.professional_email && profile.professional_email !== profile.email && (
                             <div className="flex items-center justify-center gap-2.5 text-sm text-blue-700 font-medium bg-blue-50 py-1.5 px-3 rounded-lg shadow-sm border border-blue-100">
                                 <Briefcase className="w-4 h-4 text-blue-500 shrink-0" />
                                 <span className="truncate">{profile.professional_email}</span>
