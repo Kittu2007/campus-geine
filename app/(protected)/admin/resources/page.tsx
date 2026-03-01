@@ -111,7 +111,8 @@ export default function AdminResourcesPage() {
             setForm({ title: '', subject: '', type: 'link', url: '', description: '', promptText: '' })
             setFile(null)
             fetchResources()
-        } catch {
+        } catch (error) {
+            console.error('Resource upload error:', error)
             toast.error('Failed to add resource')
         } finally {
             setSaving(false)

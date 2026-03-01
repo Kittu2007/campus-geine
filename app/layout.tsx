@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   title: "Campus Genie — Anurag University",
   description: "The AI-powered operating system for Anurag University.",
   keywords: ["campus", "university", "AI", "chatbot", "student", "hackathon"],
+  icons: {
+    icon: "/favicon.png",
+    apple: "/anurag-logo.png",
+  },
 };
 
 export default function RootLayout({
