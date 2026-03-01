@@ -3,7 +3,7 @@ import Groq from 'groq-sdk'
 
 // Basic in-memory rate limiting (Note: resets on serverless cold starts)
 const rateLimitMap = new Map<string, { count: number, lastReset: number }>()
-const RATE_LIMIT_MAX = 50
+const RATE_LIMIT_MAX = 20 // max requests per window
 const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
 
 export const dynamic = 'force-dynamic'
@@ -34,20 +34,15 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. API Key Validation
-    const rawKey = process.env.ELIN_GROQ_API_KEY
-    if (!rawKey || rawKey.includes('your_elin')) {
-        console.error('[elin-chat-error] ELIN_GROQ_API_KEY is missing, placeholder, or undefined.')
+    const rawKey = process.env.ELIN_API_KEY || process.env.GROQ_API_KEY
+    if (!rawKey) {
+        console.error('[elin-chat-error] ELIN_API_KEY or GROQ_API_KEY is missing or undefined.')
         return NextResponse.json(
-            {
-                success: false,
-                message: '',
-                error: 'AI service configuration error: ELIN_GROQ_API_KEY is missing in environment variables. Please add it to your Vercel project settings.'
-            },
+            { success: false, message: '', error: 'AI service configuration error. Please contact support.' },
             { status: 500 }
         )
     }
 
-    // Initialize Groq client
     const groq = new Groq({ apiKey: rawKey.trim() })
 
     try {
@@ -65,7 +60,7 @@ export async function POST(request: NextRequest) {
 
         const validDifficulty = difficulty || 'High Schooler'
 
-        // 4. Memory Limiter (System + Last turns + Current Message)
+        // 4. Memory Limiter (System + Last 2 turns + Current Message)
         const systemPrompt = `Act as a Master Educator specializing in the 'Explain Like I'm New' framework.
 
 Context: The user needs to understand the requested topic.
@@ -85,9 +80,9 @@ Next Step: Ask a brief question to confirm the user grasped the concept.`
 
         const validHistory = Array.isArray(history) ? history : []
 
-        // Take last 6 elements (3 turns)
-        const trimmedHistory = validHistory.slice(-6).map((h: any) => ({
-            role: (h.role === 'assistant' || h.role === 'model') ? 'assistant' as const : 'user' as const,
+        // Take last 4 elements (2 user turns + 2 assistant turns = 2 full turns)
+        const trimmedHistory = validHistory.slice(-4).map((h: any) => ({
+            role: h.role === 'assistant' ? 'assistant' as const : 'user' as const,
             content: typeof h.content === 'string' ? h.content : '',
         }))
 
@@ -100,24 +95,27 @@ Next Step: Ask a brief question to confirm the user grasped the concept.`
 
         console.log(`[elin-chat] Sending request to Groq API using difficulty: ${validDifficulty}`)
 
-        // 5. Execute Groq Call with 15s Timeout
-        const completion = await groq.chat.completions.create({
+        // 5. Execute Groq Call with 15s Timeout using Promise.race
+        const generatePromise = groq.chat.completions.create({
             model: 'llama-3.3-70b-versatile',
             messages: chatMessages,
             max_tokens: 800,
-            temperature: 0.6,
-        }).catch(err => {
-            console.error('[elin-chat-error] Groq API call failed:', err.message)
-            throw err
+            temperature: 0.7,
         })
 
+        const timeoutPromise = new Promise<{ timeout: true }>((_, reject) => {
+            setTimeout(() => reject(new Error('TIMEOUT')), 15000)
+        })
+
+        const result = await Promise.race([generatePromise, timeoutPromise]) as any
+
         // 6. Safe Extraction
-        const extractedText = completion.choices?.[0]?.message?.content
+        const extractedText = result.choices?.[0]?.message?.content
 
         if (!extractedText) {
-            console.error('[elin-chat-error] Empty response from Groq.')
+            console.error('[elin-chat-error] Empty response extracted from Groq.')
             return NextResponse.json(
-                { success: false, message: '', error: 'The AI generated an empty response. Please try again.' },
+                { success: false, message: '', error: 'The AI generated an empty response.' },
                 { status: 500 }
             )
         }
@@ -132,22 +130,19 @@ Next Step: Ask a brief question to confirm the user grasped the concept.`
         )
 
     } catch (error: any) {
-        console.error('[elin-chat-error] Caught Exception in Backend:', error)
+        console.error('[elin-chat-error] Caught Exception in Backend:')
         const errorMessage = error.message || String(error)
+        console.error(errorMessage)
 
-        if (errorMessage.includes('api_key')) {
+        if (errorMessage === 'TIMEOUT' || error.name === 'AbortError') {
             return NextResponse.json(
-                { success: false, message: '', error: 'Invalid Groq API Key for ELIN. Please check your credentials.' },
-                { status: 401 }
+                { success: false, message: '', error: 'Request timed out waiting for AI response.' },
+                { status: 504 }
             )
         }
 
         return NextResponse.json(
-            {
-                success: false,
-                message: '',
-                error: `Backend Error (ELIN): ${errorMessage.substring(0, 100)}...`
-            },
+            { success: false, message: '', error: 'An internal server error occurred while processing the request.' },
             { status: 500 }
         )
     }
