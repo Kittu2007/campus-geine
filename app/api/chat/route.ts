@@ -4,7 +4,7 @@ import campusInfo from '@/lib/university-context.json'
 
 // Basic in-memory rate limiting (Note: resets on serverless cold starts)
 const rateLimitMap = new Map<string, { count: number, lastReset: number }>()
-const RATE_LIMIT_MAX = 30 // max requests per window
+const RATE_LIMIT_MAX = 50 // increased slightly
 const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
 
 export const dynamic = 'force-dynamic'
@@ -36,10 +36,14 @@ export async function POST(request: NextRequest) {
 
     // 2. API Key Validation
     const rawKey = process.env.GROQ_API_KEY
-    if (!rawKey) {
-        console.error('[chat-error] GROQ_API_KEY is missing or undefined.')
+    if (!rawKey || rawKey.includes('your_groq')) {
+        console.error('[chat-error] GROQ_API_KEY is missing, placeholder, or undefined.')
         return NextResponse.json(
-            { success: false, message: '', error: 'AI service configuration error. Please contact support.' },
+            {
+                success: false,
+                message: '',
+                error: 'AI service configuration error: GROQ_API_KEY is missing in environment variables. Please add it to your Vercel project settings.'
+            },
             { status: 500 }
         )
     }
@@ -72,9 +76,9 @@ ${JSON.stringify(campusInfo, null, 2)}`
 
         const validHistory = Array.isArray(history) ? history : []
 
-        // Take last 6 elements
-        const trimmedHistory = validHistory.slice(-6).map((h: any) => ({
-            role: h.role === 'assistant' ? 'assistant' as const : 'user' as const,
+        // Take last 8 elements for better context
+        const trimmedHistory = validHistory.slice(-8).map((h: any) => ({
+            role: (h.role === 'assistant' || h.role === 'model') ? 'assistant' as const : 'user' as const,
             content: typeof h.content === 'string' ? h.content : '',
         }))
 
@@ -92,7 +96,10 @@ ${JSON.stringify(campusInfo, null, 2)}`
             messages: chatMessages,
             model: "llama-3.3-70b-versatile",
             max_completion_tokens: 500,
-            temperature: 0.7,
+            temperature: 0.6,
+        }).catch(err => {
+            console.error('[chat-error] Groq API call failed:', err.message)
+            throw err
         })
 
         // 6. Safe Extraction
@@ -101,7 +108,7 @@ ${JSON.stringify(campusInfo, null, 2)}`
         if (!extractedText) {
             console.error('[chat-error] Empty response from Groq.')
             return NextResponse.json(
-                { success: false, message: '', error: 'The AI generated an empty response.' },
+                { success: false, message: '', error: 'The AI generated an empty response. Please try again.' },
                 { status: 500 }
             )
         }
@@ -120,8 +127,27 @@ ${JSON.stringify(campusInfo, null, 2)}`
 
         const errorMessage = error.message || String(error)
 
+        // Return a more descriptive error if possible
+        if (errorMessage.includes('api_key')) {
+            return NextResponse.json(
+                { success: false, message: '', error: 'Invalid Groq API Key. Please check your credentials.' },
+                { status: 401 }
+            )
+        }
+
+        if (errorMessage.includes('model_not_found') || errorMessage.includes('404')) {
+            return NextResponse.json(
+                { success: false, message: '', error: 'Model not found. Please check the model name configuration.' },
+                { status: 404 }
+            )
+        }
+
         return NextResponse.json(
-            { success: false, message: '', error: 'An internal server error occurred while processing the request.' },
+            {
+                success: false,
+                message: '',
+                error: `Backend Error: ${errorMessage.substring(0, 100)}...`
+            },
             { status: 500 }
         )
     }
