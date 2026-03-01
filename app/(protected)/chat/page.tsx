@@ -31,10 +31,10 @@ function CopyButton({ text }: { text: string }) {
     return (
         <button
             onClick={handleCopy}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-700/50 transition-all"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
             title="Copy"
         >
-            {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
         </button>
     )
 }
@@ -55,7 +55,7 @@ function SpeakButton({ text }: { text: string }) {
     return (
         <button
             onClick={handleSpeak}
-            className={`p-1.5 rounded-lg transition-all ${speaking ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-700/50'}`}
+            className={`p-1.5 rounded-lg transition-all ${speaking ? 'text-blue-600 bg-blue-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
             title={speaking ? 'Stop' : 'Read aloud'}
         >
             <Volume2 className="w-3.5 h-3.5" />
@@ -185,15 +185,15 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="flex flex-col h-[calc(100vh-4rem)] bg-[#0d1117] relative overflow-hidden">
+        <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-50 relative overflow-hidden font-sans">
             {/* Background Details */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
-                <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-indigo-600/5 rounded-full blur-3xl" />
+                <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-slate-200/50 rounded-full blur-3xl" />
             </div>
 
             {/* Disclaimer Bar */}
-            <div className="relative z-10 flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs shrink-0">
+            <div className="relative z-10 flex items-center gap-2 px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-700 text-xs shrink-0 font-medium">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>AI responses may be inaccurate. Verify critical information with the college office.</span>
             </div>
@@ -203,14 +203,14 @@ export default function ChatPage() {
                 {messages.length === 0 ? (
                     /* Initial Welcome View */
                     <div className="flex flex-col items-center justify-center min-h-full text-center pb-32">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center mb-6 shadow-2xl shadow-blue-500/30 ring-1 ring-white/10">
-                            <Bot className="w-10 h-10 text-white" />
+                        <div className="w-20 h-20 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-6 shadow-md ring-4 ring-slate-100">
+                            <Bot className="w-10 h-10 text-blue-600" />
                         </div>
 
-                        <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2 tracking-tight">
                             Hello! How can I help you today?
                         </h1>
-                        <p className="text-slate-400 mb-10 text-base">
+                        <p className="text-slate-500 mb-10 text-base">
                             Ask me anything about Anurag University — I&apos;m here to assist!
                         </p>
 
@@ -219,9 +219,9 @@ export default function ChatPage() {
                                 <button
                                     key={chip}
                                     onClick={() => sendMessage(chip)}
-                                    className="px-5 py-3.5 rounded-xl border border-slate-700/60 bg-slate-800/40 backdrop-blur-sm text-sm text-slate-300 hover:text-white hover:border-blue-500/50 hover:bg-slate-700/50 transition-all duration-200 text-left font-medium group"
+                                    className="px-5 py-3.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-600 hover:text-blue-700 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left font-medium shadow-sm active:scale-95"
                                 >
-                                    <span className="group-hover:text-blue-300 transition-colors">{chip}</span>
+                                    <span>{chip}</span>
                                 </button>
                             ))}
                         </div>
@@ -232,26 +232,26 @@ export default function ChatPage() {
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 {msg.role === 'assistant' && (
-                                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 mt-0.5 shadow-lg shadow-blue-500/20">
-                                        <Bot className="w-4 h-4 text-white" />
+                                    <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                                        <Bot className="w-4 h-4 text-blue-600" />
                                     </div>
                                 )}
 
                                 <div className={`max-w-[78%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-                                    <div className={`rounded-2xl px-4 py-3 leading-relaxed ${msg.role === 'user'
-                                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-sm shadow-lg shadow-blue-500/20'
-                                            : msg.isError
-                                                ? 'bg-red-950/70 border border-red-900 text-red-200 rounded-tl-sm font-medium shadow-lg shadow-red-900/10'
-                                                : 'bg-slate-800/70 border border-slate-700/50 text-slate-200 rounded-tl-sm backdrop-blur-sm'
+                                    <div className={`rounded-2xl px-5 py-3.5 leading-relaxed text-[15px] shadow-sm ${msg.role === 'user'
+                                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-tr-sm'
+                                        : msg.isError
+                                            ? 'bg-red-50 border border-red-200 text-red-700 rounded-tl-sm font-medium'
+                                            : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm'
                                         }`}>
                                         {msg.content === '' && loading && i === messages.length - 1 ? (
                                             <div className="flex items-center gap-2 text-slate-400">
                                                 <div className="flex gap-1">
-                                                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:0ms]" />
-                                                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:150ms]" />
-                                                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:300ms]" />
+                                                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0ms]" />
+                                                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:150ms]" />
+                                                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:300ms]" />
                                                 </div>
-                                                <span className="text-xs">Processing...</span>
+                                                <span className="text-xs font-medium">Genie is thinking...</span>
                                             </div>
                                         ) : (
                                             <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -260,7 +260,7 @@ export default function ChatPage() {
 
                                     {/* Action buttons (only show if not loading and not an error) */}
                                     {msg.role === 'assistant' && msg.content && !msg.isError && (
-                                        <div className="flex items-center gap-1 ml-1">
+                                        <div className="flex items-center gap-1 ml-1 mt-1">
                                             <CopyButton text={msg.content} />
                                             <SpeakButton text={msg.content} />
                                         </div>
@@ -268,8 +268,8 @@ export default function ChatPage() {
                                 </div>
 
                                 {msg.role === 'user' && (
-                                    <div className="w-8 h-8 rounded-xl bg-slate-700 flex items-center justify-center shrink-0 mt-0.5">
-                                        <User className="w-4 h-4 text-slate-300" />
+                                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0 mt-0.5">
+                                        <User className="w-4 h-4 text-slate-600" />
                                     </div>
                                 )}
                             </div>
@@ -281,9 +281,9 @@ export default function ChatPage() {
             </div>
 
             {/* Input Bar */}
-            <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-4 pt-6 bg-gradient-to-t from-[#0d1117] via-[#0d1117]/95 to-transparent">
-                <div className="max-w-3xl mx-auto">
-                    <div className="flex items-end gap-2 p-2 rounded-2xl bg-slate-800/80 backdrop-blur-md border border-slate-700/50 shadow-2xl shadow-black/50">
+            <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-4 pt-6 bg-gradient-to-t from-slate-50 relative pointer-events-none">
+                <div className="max-w-3xl mx-auto pointer-events-auto">
+                    <div className="flex items-end gap-2 p-2 rounded-2xl bg-white border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
                         <textarea
                             ref={inputRef}
                             value={input}
@@ -293,22 +293,25 @@ export default function ChatPage() {
                                 e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
                             }}
                             onKeyDown={handleKeyDown}
-                            placeholder="Ask Campus Buddy anything..."
+                            placeholder="Ask Campus Genie anything..."
                             rows={1}
                             disabled={loading}
-                            className="flex-1 bg-transparent border-none outline-none resize-none text-white placeholder:text-slate-500 px-3 py-2 min-h-[40px] max-h-[120px] leading-relaxed"
+                            className="flex-1 bg-transparent border-none outline-none resize-none text-slate-800 placeholder:text-slate-400 px-3 py-2 min-h-[40px] max-h-[120px] leading-relaxed"
                             style={{ height: '40px' }}
                         />
                         <Button
                             onClick={() => sendMessage()}
                             disabled={loading || !input.trim()}
-                            className={`shrink-0 w-10 h-10 rounded-xl p-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 border-0 shadow-lg shadow-blue-500/30 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${sendAnim ? 'send-anim' : ''}`}
+                            className={`shrink-0 w-10 h-10 rounded-xl p-0 bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${sendAnim ? 'send-anim' : ''}`}
                         >
                             {loading
                                 ? <Loader2 className="w-4 h-4 text-white animate-spin" />
                                 : <Send className="w-4 h-4 text-white" />
                             }
                         </Button>
+                    </div>
+                    <div className="text-center mt-2 pb-1">
+                        <span className="text-[10px] text-slate-400 pointer-events-auto">Campus Genie can make mistakes. Verify important information.</span>
                     </div>
                 </div>
             </div>

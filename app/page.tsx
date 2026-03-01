@@ -1,12 +1,9 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import {
-  GraduationCap,
   MessageCircle,
   AlertTriangle,
-  BookOpen,
   Users,
-  User,
   ArrowRight,
   Sparkles,
   Shield,
@@ -17,98 +14,84 @@ const features = [
   {
     icon: MessageCircle,
     title: 'Campus Buddy AI',
-    description: 'Get instant answers to campus FAQs powered by RAG and Groq LLaMA 3.',
-    color: 'from-blue-500 to-cyan-500',
+    description: 'Get instant answers to campus FAQs powered by Groq LLaMA 3.3.',
+    color: 'from-blue-600 to-blue-700',
   },
   {
     icon: AlertTriangle,
     title: 'Infrastructure Complaints',
     description: 'Report broken equipment with photo evidence. Track resolution in real-time.',
-    color: 'from-amber-500 to-orange-500',
-  },
-  {
-    icon: BookOpen,
-    title: 'Resources Hub',
-    description: 'Browse subject-wise PDFs, videos, and AI prompts uploaded by faculty.',
-    color: 'from-emerald-500 to-teal-500',
+    color: 'from-red-600 to-red-700',
   },
   {
     icon: Users,
     title: 'Hackathon Team Connect',
     description: 'Post team requirements and find teammates with complementary skills.',
-    color: 'from-purple-500 to-pink-500',
-  },
-  {
-    icon: User,
-    title: 'Student Profile',
-    description: 'Showcase GitHub, LeetCode, LinkedIn — your campus portfolio in one link.',
-    color: 'from-indigo-500 to-blue-500',
-  },
-  {
-    icon: Shield,
-    title: 'Secure by Design',
-    description: 'Domain-restricted auth ensures only verified university members can access.',
-    color: 'from-slate-500 to-slate-600',
+    color: 'from-indigo-600 to-indigo-700',
   },
 ]
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-slate-950 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 overflow-hidden font-sans text-slate-800">
       {/* Hero */}
-      <section className="relative min-h-screen flex items-center justify-center px-4">
+      <section className="relative min-h-screen flex items-center justify-center px-4 pt-20">
         {/* Background effects */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-3xl" />
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-600/5 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-slate-200/20 rounded-full blur-3xl" />
         </div>
 
         {/* Grid pattern overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
 
         <div className="relative z-10 text-center max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium mb-8 shadow-sm">
             <Sparkles className="w-4 h-4" />
             AI-Powered Campus Platform
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
-            <span className="text-white">Campus</span>
-            <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent"> OS</span>
-          </h1>
+          <div className="mb-6 inline-block relative">
+            <img src="/anurag-logo.png" alt="Anurag Logo" className="w-20 h-20 mx-auto object-contain mb-6" />
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-800">
+              Campus Genie
+            </h1>
+            {/* Subtle red-blue gradient underline */}
+            <div className="absolute -bottom-4 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 via-indigo-500 to-blue-600 rounded-full opacity-80" />
+          </div>
 
-          <p className="text-xl md:text-2xl text-slate-400 mb-4 max-w-2xl mx-auto">
-            The Unified Operating System for Campus Life
+          <p className="text-xl md:text-2xl text-slate-600 mb-4 max-w-2xl mx-auto mt-8 font-medium">
+            The AI-powered operating system for Anurag University
           </p>
 
           <p className="text-base text-slate-500 mb-10 max-w-xl mx-auto">
-            One platform for AI-powered academic support, infrastructure complaints,
-            study resources, hackathon team discovery, and student profiles.
+            One platform for AI academic support, infrastructure complaints,
+            and hackathon team discovery.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/login">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-8 py-6 text-lg shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-blue-500/40 hover:scale-105"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-8 py-6 text-lg shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] transition-all duration-200 ease-in-out hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:scale-105 rounded-xl border border-blue-500"
               >
                 Get Started <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
           </div>
 
-          <div className="mt-12 flex items-center justify-center gap-8 text-sm text-slate-500">
+          <div className="mt-12 flex items-center justify-center gap-8 text-sm text-slate-500 font-medium">
             <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-400" />
+              <Zap className="w-4 h-4 text-amber-500" />
               Groq AI
             </div>
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-emerald-400" />
+              <Shield className="w-4 h-4 text-emerald-500" />
               Secure Auth
             </div>
             <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-blue-400" />
+              <img src="/anurag-logo.png" alt="Icon" className="w-4 h-4 object-contain" />
               Anurag University
             </div>
           </div>
@@ -116,30 +99,30 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="relative py-24 px-4">
+      <section className="relative py-24 px-4 bg-white border-y border-slate-200">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4 tracking-tight">
               Everything Campus, One Platform
             </h2>
-            <p className="text-slate-400 max-w-xl mx-auto">
-              Six integrated modules that replace 10+ disconnected tools students use daily.
+            <p className="text-slate-500 max-w-xl mx-auto text-lg">
+              Integrated modules that replace disconnected tools students use daily.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((feature) => {
               const Icon = feature.icon
               return (
                 <div
                   key={feature.title}
-                  className="group relative p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+                  className="group relative p-8 rounded-2xl bg-white border border-slate-200 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-md"
                 >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-6 h-6 text-white" />
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 shadow-md group-hover:scale-110 transition-transform duration-200`}>
+                    <Icon className="w-7 h-7 text-white" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-xl font-bold text-slate-800 mb-3">{feature.title}</h3>
+                  <p className="text-base text-slate-600 leading-relaxed">{feature.description}</p>
                 </div>
               )
             })}
@@ -149,18 +132,20 @@ export default function LandingPage() {
 
       {/* CTA */}
       <section className="relative py-24 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="p-12 rounded-3xl bg-gradient-to-br from-blue-600/20 to-indigo-600/20 border border-blue-500/20">
-            <h2 className="text-3xl font-bold text-white mb-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="p-12 sm:p-16 rounded-[2rem] bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-64 h-64 bg-blue-600/5 rounded-full blur-3xl" />
+
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-6 tracking-tight relative z-10">
               Ready to upgrade your campus experience?
             </h2>
-            <p className="text-slate-400 mb-8">
-              Sign in with your university email and start using Campus OS in seconds.
+            <p className="text-slate-600 mb-8 text-lg relative z-10 max-w-2xl mx-auto">
+              Sign in with your university email and start using Campus Genie in seconds.
             </p>
-            <Link href="/login">
+            <Link href="/login" className="relative z-10">
               <Button
                 size="lg"
-                className="bg-white text-slate-900 hover:bg-slate-100 font-semibold px-8 py-6 text-lg transition-all duration-300 hover:scale-105"
+                className="bg-white text-blue-700 border border-slate-200 shadow-sm hover:bg-slate-50 font-semibold px-8 py-6 text-lg transition-all duration-200 ease-in-out hover:scale-105 rounded-xl hover:shadow-md"
               >
                 Sign In Now <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
@@ -170,11 +155,11 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 py-8 px-4">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+      <footer className="border-t border-slate-200 bg-white py-8 px-4">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500 font-medium">
           <div className="flex items-center gap-2">
-            <GraduationCap className="w-4 h-4" />
-            Campus OS — Anurag University
+            <img src="/anurag-logo.png" alt="AnuragLogo" className="w-5 h-5 object-contain" />
+            Campus Genie — Anurag University
           </div>
           <p>Built with ❤️ for the campus community</p>
         </div>

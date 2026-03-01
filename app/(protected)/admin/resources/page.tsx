@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/firebase/AuthContext'
 import { createClient } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { BookOpen, Plus, Trash2, Loader2, ExternalLink } from 'lucide-react'
+import { BookOpen, Plus, Trash2, Loader2, ExternalLink, Link2, FileText, Video, Sparkles } from 'lucide-react'
 
 interface Resource {
     id: string
@@ -27,6 +27,13 @@ const subjects = [
     'Data Structures', 'DBMS', 'Operating Systems', 'Networks',
     'Mathematics', 'Physics', 'English', 'Others',
 ]
+
+const typeConfig: Record<string, { icon: React.ElementType, color: string, bg: string }> = {
+    link: { icon: Link2, color: 'text-blue-600', bg: 'bg-blue-100' },
+    pdf: { icon: FileText, color: 'text-rose-600', bg: 'bg-rose-100' },
+    video: { icon: Video, color: 'text-amber-600', bg: 'bg-amber-100' },
+    prompt: { icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-100' }
+}
 
 export default function AdminResourcesPage() {
     const { user: firebaseUser } = useAuth()
@@ -100,7 +107,7 @@ export default function AdminResourcesPage() {
                 uploaded_by: firebaseUser?.uid,
             })
             if (error) throw error
-            toast.success('Resource added!')
+            toast.success('Resource added successfully!')
             setForm({ title: '', subject: '', type: 'link', url: '', description: '', promptText: '' })
             setFile(null)
             fetchResources()
@@ -112,10 +119,11 @@ export default function AdminResourcesPage() {
     }
 
     const deleteResource = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this resource?')) return
         const supabase = createClient()
         const { error } = await supabase.from('resources').delete().eq('id', id)
         if (error) {
-            toast.error('Failed to delete')
+            toast.error('Failed to delete resource')
         } else {
             toast.success('Resource deleted')
             fetchResources()
@@ -123,128 +131,180 @@ export default function AdminResourcesPage() {
     }
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8">
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2 mb-6">
-                <BookOpen className="w-6 h-6 text-emerald-400" />
-                Manage Resources
-            </h1>
+        <div className="max-w-6xl mx-auto px-4 py-8 font-sans">
+            <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+                    <BookOpen className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Manage Resources</h1>
+                    <p className="text-sm font-medium text-slate-500 mt-0.5">Upload and organize academic materials for students</p>
+                </div>
+            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Add Form */}
-                <Card className="bg-slate-800/50 border-slate-700/50 lg:col-span-1">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-white flex items-center gap-2">
-                            <Plus className="w-5 h-5" /> Add Resource
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={addResource} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label className="text-slate-300">Title *</Label>
-                                <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-                                    className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500" placeholder="Resource title" required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-300">Subject *</Label>
-                                <Select value={form.subject} onValueChange={v => setForm({ ...form, subject: v })}>
-                                    <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                                        <SelectValue placeholder="Select subject" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-700">
-                                        {subjects.map(s => (
-                                            <SelectItem key={s} value={s} className="text-slate-200 focus:bg-slate-700">{s}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-300">Type *</Label>
-                                <Select value={form.type} onValueChange={v => setForm({ ...form, type: v })}>
-                                    <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-700">
-                                        <SelectItem value="link" className="text-slate-200">🔗 Link</SelectItem>
-                                        <SelectItem value="video" className="text-slate-200">🎬 Video</SelectItem>
-                                        <SelectItem value="pdf" className="text-slate-200">📄 PDF</SelectItem>
-                                        <SelectItem value="prompt" className="text-slate-200">✨ AI Prompt</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            {['pdf', 'video'].includes(form.type) ? (
+                <div className="lg:col-span-1">
+                    <Card className="bg-white border-slate-200 shadow-sm sticky top-8 rounded-2xl overflow-hidden">
+                        <div className="h-2 bg-gradient-to-r from-emerald-400 to-emerald-600" />
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <Plus className="w-5 h-5 text-emerald-600" /> Add New Resource
+                            </CardTitle>
+                            <CardDescription className="text-slate-500 font-medium">
+                                Fill in the details to upload a new resource.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={addResource} className="space-y-5">
                                 <div className="space-y-2">
-                                    <Label className="text-slate-300">Upload File *</Label>
-                                    <Input
-                                        type="file"
-                                        accept={form.type === 'pdf' ? '.pdf' : 'video/*'}
-                                        onChange={e => setFile(e.target.files?.[0] || null)}
-                                        className="bg-slate-700/50 border-slate-600 text-slate-300 file:bg-slate-600 file:text-white file:border-0 file:rounded-md file:px-2 file:py-1 hover:file:bg-slate-500"
-                                        required
-                                    />
+                                    <Label className="text-slate-700 font-semibold">Title *</Label>
+                                    <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+                                        className="bg-slate-50/50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-emerald-600 shadow-sm" placeholder="e.g. Midterm Study Guide" required />
                                 </div>
-                            ) : form.type === 'prompt' ? (
                                 <div className="space-y-2">
-                                    <Label className="text-slate-300">Prompt / Question *</Label>
-                                    <Textarea
-                                        value={form.promptText}
-                                        onChange={e => setForm({ ...form, promptText: e.target.value })}
-                                        className="bg-slate-700/50 border-slate-600 text-white min-h-[100px]"
-                                        placeholder="Paste the prompt or tricky question here..."
-                                        required
-                                    />
+                                    <Label className="text-slate-700 font-semibold">Subject *</Label>
+                                    <Select value={form.subject} onValueChange={v => setForm({ ...form, subject: v })} required>
+                                        <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-800 focus:ring-emerald-600 shadow-sm">
+                                            <SelectValue placeholder="Select subject" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white border-slate-200 shadow-md rounded-xl">
+                                            {subjects.map(s => (
+                                                <SelectItem key={s} value={s} className="text-slate-700 focus:bg-emerald-50 focus:text-emerald-700 cursor-pointer font-medium">{s}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                            ) : (
                                 <div className="space-y-2">
-                                    <Label className="text-slate-300">URL *</Label>
-                                    <Input value={form.url} onChange={e => setForm({ ...form, url: e.target.value })}
-                                        className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500" placeholder="https://..." required />
+                                    <Label className="text-slate-700 font-semibold">Format Type *</Label>
+                                    <Select value={form.type} onValueChange={v => setForm({ ...form, type: v })}>
+                                        <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-800 focus:ring-emerald-600 shadow-sm">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white border-slate-200 shadow-md rounded-xl">
+                                            <SelectItem value="link" className="focus:bg-emerald-50 text-slate-700 font-medium">🔗 Web Link</SelectItem>
+                                            <SelectItem value="video" className="focus:bg-emerald-50 text-slate-700 font-medium">🎬 Video Course</SelectItem>
+                                            <SelectItem value="pdf" className="focus:bg-emerald-50 text-slate-700 font-medium">📄 PDF Document</SelectItem>
+                                            <SelectItem value="prompt" className="focus:bg-emerald-50 text-slate-700 font-medium">✨ AI Prompt</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                            )}
+                                {['pdf', 'video'].includes(form.type) ? (
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-700 font-semibold">Upload File *</Label>
+                                        <Input
+                                            type="file"
+                                            accept={form.type === 'pdf' ? '.pdf' : 'video/*'}
+                                            onChange={e => setFile(e.target.files?.[0] || null)}
+                                            className="bg-slate-50/50 border-slate-200 text-slate-600 file:bg-emerald-100 file:text-emerald-700 file:font-semibold file:border-0 file:rounded-md file:px-3 file:py-1 hover:file:bg-emerald-200 shadow-sm cursor-pointer file:cursor-pointer transition-colors"
+                                            required
+                                        />
+                                    </div>
+                                ) : form.type === 'prompt' ? (
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-700 font-semibold">Prompt Content *</Label>
+                                        <Textarea
+                                            value={form.promptText}
+                                            onChange={e => setForm({ ...form, promptText: e.target.value })}
+                                            className="bg-slate-50/50 border-slate-200 text-slate-800 focus-visible:ring-emerald-600 shadow-sm min-h-[100px] resize-none"
+                                            placeholder="Paste the prompt or tricky question here..."
+                                            required
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-700 font-semibold">Resource URL *</Label>
+                                        <Input value={form.url} onChange={e => setForm({ ...form, url: e.target.value })}
+                                            className="bg-slate-50/50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-emerald-600 shadow-sm" placeholder="https://..." required />
+                                    </div>
+                                )}
 
-                            {form.type !== 'prompt' && (
-                                <div className="space-y-2">
-                                    <Label className="text-slate-300">Description</Label>
-                                    <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                                        className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500" placeholder="Optional description" />
+                                {form.type !== 'prompt' && (
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-700 font-semibold">Short Note</Label>
+                                        <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+                                            className="bg-slate-50/50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-emerald-600 shadow-sm resize-none" placeholder="Optional description..." />
+                                    </div>
+                                )}
+
+                                <div className="pt-2">
+                                    <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-5 rounded-xl shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" disabled={saving}>
+                                        {saving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Plus className="w-5 h-5 mr-2" />}
+                                        Publish Resource
+                                    </Button>
                                 </div>
-                            )}
-                            <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={saving}>
-                                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                                Add Resource
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 {/* Existing Resources */}
-                <div className="lg:col-span-2 space-y-3">
+                <div className="lg:col-span-2 space-y-4">
+                    <div className="flex items-center justify-between px-1 mb-2">
+                        <h2 className="text-lg font-bold text-slate-800">Uploaded Resources</h2>
+                        <span className="text-sm font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">{resources.length} Total</span>
+                    </div>
+
                     {loading ? (
-                        <p className="text-slate-500">Loading...</p>
+                        <div className="space-y-3">
+                            {[1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse" />)}
+                        </div>
                     ) : resources.length === 0 ? (
-                        <p className="text-slate-500 text-center py-12">No resources yet</p>
+                        <Card className="bg-slate-50 border-slate-200 border-dashed border-2 shadow-none">
+                            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                                <div className="bg-slate-100 p-4 rounded-full mb-4">
+                                    <BookOpen className="w-8 h-8 text-slate-400" />
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-700 mb-1">No resources found</h3>
+                                <p className="text-sm text-slate-500 font-medium">Be the first to upload study materials for your peers!</p>
+                            </CardContent>
+                        </Card>
                     ) : (
-                        resources.map(r => (
-                            <Card key={r.id} className="bg-slate-800/30 border-slate-700/50">
-                                <CardContent className="flex items-center gap-4 p-4">
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-medium text-white text-sm truncate">{r.title}</h3>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <Badge variant="secondary" className="text-xs bg-slate-700/50 text-slate-300">{r.subject}</Badge>
-                                            <Badge variant="outline" className="text-xs capitalize">{r.type}</Badge>
-                                        </div>
-                                    </div>
-                                    <a href={r.url} target="_blank" rel="noopener noreferrer">
-                                        <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
-                                            <ExternalLink className="w-4 h-4" />
-                                        </Button>
-                                    </a>
-                                    <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                                        onClick={() => deleteResource(r.id)}>
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        ))
+                        <div className="grid grid-cols-1 gap-3">
+                            {resources.map(r => {
+                                const typeStyling = typeConfig[r.type] || typeConfig['link']
+                                const Icon = typeStyling.icon
+
+                                return (
+                                    <Card key={r.id} className="bg-white border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all duration-300 rounded-xl overflow-hidden group">
+                                        <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5">
+
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${typeStyling.bg} group-hover:scale-105 transition-transform duration-300`}>
+                                                <Icon className={`w-6 h-6 ${typeStyling.color}`} />
+                                            </div>
+
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-bold text-slate-800 text-base truncate mb-1 group-hover:text-emerald-700 transition-colors">{r.title}</h3>
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <Badge variant="secondary" className="text-[10px] bg-slate-100 text-slate-600 font-semibold px-2 py-0 border-transparent hover:bg-slate-200">{r.subject}</Badge>
+                                                    <Badge variant="outline" className={`text-[10px] capitalize px-2 py-0 border-${typeStyling.color.split('-')[1]}-200 ${typeStyling.color} bg-${typeStyling.color.split('-')[1]}-50`}>
+                                                        {r.type}
+                                                    </Badge>
+                                                    <span className="text-xs font-medium text-slate-400 ml-1">
+                                                        {new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-0 border-slate-100 justify-end">
+                                                {r.type !== 'prompt' && r.url && (
+                                                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="flex-1 sm:flex-none">
+                                                        <Button variant="outline" size="sm" className="w-full sm:w-auto bg-white border-slate-200 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 font-semibold h-9">
+                                                            <ExternalLink className="w-4 h-4 mr-2 sm:mr-0" />
+                                                            <span className="sm:hidden">Open</span>
+                                                        </Button>
+                                                    </a>
+                                                )}
+                                                <Button variant="outline" size="sm" className="bg-white border-red-100 text-red-500 hover:text-red-700 hover:bg-red-50 hover:border-red-200 h-9"
+                                                    onClick={() => deleteResource(r.id)}>
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )
+                            })}
+                        </div>
                     )}
                 </div>
             </div>

@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Campus OS — The AI-Powered Campus Platform",
-  description: "The unified AI-powered operating system for campus life at Anurag University. Get instant answers, report issues, share resources, and find hackathon teams.",
+  title: "Campus Genie — Anurag University",
+  description: "The AI-powered operating system for Anurag University.",
   keywords: ["campus", "university", "AI", "chatbot", "student", "hackathon"],
 };
 
@@ -21,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans antialiased bg-slate-950 text-white`}>
+    <html lang="en">
+      <body className={`${inter.variable} font-sans antialiased bg-slate-50 text-slate-800`}>
         <AuthProvider>
           {children}
         </AuthProvider>
