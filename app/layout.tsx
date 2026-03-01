@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
-import "./globals.css?v=1.0.1";
+import { Inter } from "next/font/google";
+import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/firebase/AuthContext";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${spaceGrotesk.variable} font-sans antialiased bg-slate-50 text-slate-800`}>
+      <body className={`${inter.variable} font-sans antialiased bg-slate-50 text-slate-800`}>
         <AuthProvider>
           {children}
         </AuthProvider>

@@ -1,41 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/firebase/AuthContext'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-    MessageSquare, AlertTriangle, BookOpen, Users, User, Sparkles, ArrowRight,
-    TrendingUp, CheckCircle2, Clock
+    MessageSquare, AlertTriangle, BookOpen, Users, User, Sparkles, ArrowRight
 } from 'lucide-react'
 
-// Animated Counter Component
-function CountUp({ end, duration = 2000, suffix = "" }: { end: number, duration?: number, suffix?: string }) {
-    const [count, setCount] = useState(0)
-
-    useEffect(() => {
-        let startTimestamp: number | null = null
-        const step = (timestamp: number) => {
-            if (!startTimestamp) startTimestamp = timestamp
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1)
-            setCount(Math.floor(progress * end))
-            if (progress < 1) {
-                window.requestAnimationFrame(step)
-            }
-        }
-        window.requestAnimationFrame(step)
-    }, [end, duration])
-
-    return <span>{count}{suffix}</span>
-}
-
 const modules = [
-    { href: '/chat', label: 'FAQ Bot', desc: 'Instant campus information AI', icon: MessageSquare, color: 'bg-[#1E2B58]', iconColor: 'text-white' },
-    { href: '/elin', label: 'ELIN AI', desc: 'Academic master educator', icon: Sparkles, color: 'bg-[#C62026]', iconColor: 'text-white' },
-    { href: '/resources', label: 'Resources Hub', desc: 'Secure study material vault', icon: BookOpen, color: 'bg-[#1E2B58]', iconColor: 'text-white' },
-    { href: '/complaints', label: 'Complaints', desc: 'Track infrastructure resolution', icon: AlertTriangle, color: 'bg-[#C62026]', iconColor: 'text-white' },
-    { href: '/teams', label: 'Hackathon Teams', desc: 'Coordinate skill-based groups', icon: Users, color: 'bg-[#1E2B58]', iconColor: 'text-white' },
-    { href: '/profile', label: 'My Identity', desc: 'Manage official credentials', icon: User, color: 'bg-slate-700', iconColor: 'text-white' },
+    { href: '/chat', label: 'Campus Buddy AI', desc: 'Ask questions about campus', icon: MessageSquare, color: 'from-blue-600 to-indigo-600', iconText: 'text-blue-600', iconBg: 'bg-blue-100' },
+    { href: '/resources', label: 'Resources Hub', desc: 'Browse study materials', icon: BookOpen, color: 'from-emerald-500 to-teal-600', iconText: 'text-emerald-600', iconBg: 'bg-emerald-100' },
+    { href: '/complaints', label: 'Complaints', desc: 'Report infrastructure issues', icon: AlertTriangle, color: 'from-red-500 to-orange-600', iconText: 'text-red-600', iconBg: 'bg-red-100' },
+    { href: '/teams', label: 'Hackathon Teams', desc: 'Find teammates', icon: Users, color: 'from-indigo-500 to-purple-600', iconText: 'text-indigo-600', iconBg: 'bg-indigo-100' },
+    { href: '/profile/edit', label: 'My Profile', desc: 'Edit your profile', icon: User, color: 'from-slate-500 to-blue-600', iconText: 'text-slate-600', iconBg: 'bg-slate-100' },
 ]
 
 export default function DashboardPage() {
@@ -49,114 +26,50 @@ export default function DashboardPage() {
     })()
 
     return (
-        <div className="max-w-7xl mx-auto px-1 py-8 animate-slide-in">
-            {/* Header Section */}
-            <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 px-4">
-                <div>
-                    <div className="flex items-center gap-2 mb-2 text-[#C62026] font-bold text-xs uppercase tracking-[0.2em]">
-                        <div className="w-8 h-px bg-[#C62026]" />
-                        Genie Dashboard
-                    </div>
-                    <h1 className="text-4xl md:text-5xl font-black text-[#1E2B58] tracking-tighter">
-                        {greeting}, <span className="text-[#C62026]">{user?.email?.split('@')[0] || 'Student'}</span>
-                    </h1>
-                </div>
-                <div className="hidden lg:flex items-center gap-4 bg-white border-[1.5px] border-slate-200/60 p-2 rounded-sm shadow-sm">
-                    <div className="flex -space-x-2">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200" />
-                        ))}
-                    </div>
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-none">
-                        Active Now
-                    </div>
-                </div>
-            </header>
+        <div className="max-w-6xl mx-auto px-4 py-8 font-sans">
+            {/* Welcome Banner Card */}
+            <div className="mb-10 rounded-3xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 p-8 sm:p-10 shadow-lg relative overflow-hidden text-white">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+                <div className="absolute bottom-0 left-10 w-40 h-40 bg-indigo-400/20 rounded-full blur-2xl pointer-events-none" />
 
-            {/* Quick Stats / Data Drawing In */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10 px-4">
-                {[
-                    { label: 'Academic Progress', value: 87, suffix: '%', icon: TrendingUp, color: 'text-emerald-500' },
-                    { label: 'Files Secured', value: 124, suffix: '', icon: BookOpen, color: 'text-[#1E2B58]' },
-                    { label: 'Issues Resolved', value: 92, suffix: '%', icon: CheckCircle2, color: 'text-[#C62026]' },
-                    { label: 'Response Time', value: 1.2, suffix: 's', icon: Clock, color: 'text-amber-500' },
-                ].map((stat, idx) => (
-                    <Card key={idx} className="bg-white border-[1.5px] border-slate-200/60 transition-all hover:border-[#1E2B58]/30">
-                        <CardContent className="p-5 flex items-center gap-4">
-                            <div className="p-3 bg-slate-50 rounded-sm">
-                                <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                                <p className="text-2xl font-black text-[#1E2B58] tracking-tighter leading-none mt-1">
-                                    <CountUp end={stat.value} duration={1500} suffix={stat.suffix} />
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-3 bg-white/10 w-fit px-3 py-1.5 rounded-full border border-white/20 backdrop-blur-sm shadow-sm">
+                        <Sparkles className="w-4 h-4 text-blue-100" />
+                        <span className="text-sm text-blue-50 font-medium">{greeting}</span>
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-bold mb-2 tracking-tight">
+                        Welcome to Campus Genie
+                    </h1>
+                    <p className="text-blue-100 text-lg max-w-xl">
+                        Hello {user?.email?.split('@')[0] || 'Student'}. Choose a module below to get started with your campus tasks today.
+                    </p>
+                </div>
             </div>
 
-            {/* Interlocking Module Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 px-4">
-                {modules.map((mod, idx) => {
+            {/* Grid layout cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {modules.map(mod => {
                     const Icon = mod.icon
                     return (
-                        <Link key={idx} href={mod.href} className="group">
-                            <div className="relative h-48 bg-white border border-slate-200/60 overflow-hidden transition-all duration-300 group-hover:z-10 group-hover:border-[#1E2B58]/50 group-hover:shadow-[0_10px_40px_rgba(30,43,88,0.1)]">
-                                {/* Geometric Background Shape */}
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 translate-x-12 -translate-y-12 rotate-45 group-hover:scale-150 transition-transform duration-500" />
-
-                                <CardContent className="h-full p-8 flex flex-col justify-between">
-                                    <div className="flex justify-between items-start">
-                                        <div className={`w-12 h-12 flex items-center justify-center rounded-sm ${mod.color} shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
-                                            <Icon className={`w-6 h-6 ${mod.iconColor}`} />
+                        <Link key={mod.href} href={mod.href}>
+                            <Card className="h-full bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out hover:scale-[1.02] cursor-pointer group rounded-2xl overflow-hidden">
+                                <CardContent className="p-6 relative">
+                                    <div className="flex items-start justify-between">
+                                        <div className={`w-14 h-14 rounded-xl ${mod.iconBg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-200 ease-in-out shadow-sm`}>
+                                            <Icon className={`w-7 h-7 ${mod.iconText}`} />
                                         </div>
-                                        <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-[#C62026] group-hover:translate-x-1 transition-all" />
+                                        <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-200" />
                                     </div>
-
-                                    <div>
-                                        <h3 className="font-black text-[#1E2B58] text-xl tracking-tight uppercase mb-1">
-                                            {mod.label}
-                                        </h3>
-                                        <p className="text-sm text-slate-500 font-medium">
-                                            {mod.desc}
-                                        </p>
-                                    </div>
+                                    <h3 className="font-bold text-slate-800 text-xl mb-1.5">{mod.label}</h3>
+                                    <p className="text-base text-slate-500">{mod.desc}</p>
                                 </CardContent>
-
-                                {/* Interactive Edge */}
-                                <div className="absolute left-0 bottom-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-200 to-transparent group-hover:via-[#C62026] transition-all duration-500" />
-                            </div>
+                                {/* Subtle bottom border gradient on hover */}
+                                <div className={`h-1 w-full bg-gradient-to-r ${mod.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                            </Card>
                         </Link>
                     )
                 })}
             </div>
-
-            {/* Announcement Section */}
-            <div className="mt-12 px-4">
-                <div className="bg-[#1E2B58] text-white p-1 rounded-sm overflow-hidden flex flex-col md:flex-row items-center gap-6">
-                    <div className="bg-[#C62026] p-8 md:p-12 text-center md:text-left min-w-[300px]">
-                        <h2 className="text-2xl font-black uppercase tracking-tight italic">System Status</h2>
-                        <div className="mt-4 flex items-center justify-center md:justify-start gap-4">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                <span className="text-xs font-bold uppercase tracking-widest">Core Online</span>
-                            </div>
-                            <div className="w-px h-4 bg-white/20" />
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                <span className="text-xs font-bold uppercase tracking-widest">AI Calibrated</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="p-6 md:p-8 flex-1">
-                        <p className="text-blue-100 font-medium leading-relaxed max-w-2xl text-sm md:text-base">
-                            The Campus Genie operating system is fully operational. All modules (ELIN, FAQ, Resources) are synchronized with the 2024-25 academic foundation. Precise structure ensured via geometric architectural principles.
-                        </p>
-                    </div>
-                </div>
-            </div>
         </div>
     )
-} 
+}

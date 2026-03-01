@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Loader2, Save, Github, Linkedin, Code2, Award, User, Briefcase, BookOpen, GraduationCap, ArrowLeft, Fingerprint, Sparkles } from 'lucide-react'
+import { Loader2, Save, Github, Linkedin, Code2, Award, User, Briefcase, BookOpen, GraduationCap, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export default function EditProfilePage() {
@@ -85,10 +85,10 @@ export default function EditProfilePage() {
                 .eq('id', firebaseUser.uid)
 
             if (error) throw error
-            toast.success('Core Identity Updated')
+            toast.success('Profile updated successfully!')
             router.push(`/profile/${firebaseUser.uid}`)
         } catch {
-            toast.error('Identity Update Failed')
+            toast.error('Failed to update profile')
         } finally {
             setSaving(false)
         }
@@ -96,174 +96,155 @@ export default function EditProfilePage() {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-32 space-y-4 animate-pulse">
-                <Loader2 className="w-12 h-12 animate-spin text-[#1E2B58]" />
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Synchronizing Identity Core...</p>
+            <div className="flex flex-col items-center justify-center py-32 space-y-4">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <p className="text-slate-500 font-medium">Loading your profile...</p>
             </div>
         )
     }
 
     return (
-        <div className="max-w-4xl mx-auto px-1 py-10 animate-slide-in">
-            {/* Header Section */}
-            <div className="mb-12 px-4 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <div className="flex items-center gap-2 mb-2 text-[#C62026] font-bold text-xs uppercase tracking-[0.2em]">
-                        <div className="w-8 h-px bg-[#C62026]" />
-                        Identity Management
-                    </div>
-                    <h1 className="text-4xl md:text-5xl font-black text-[#1E2B58] tracking-tighter uppercase">
-                        Profile <span className="text-[#C62026]">Directives</span>
-                    </h1>
-                </div>
-                <Link href={`/profile/${firebaseUser?.uid}`}>
-                    <Button variant="outline" className="h-12 px-6 rounded-sm border-slate-200 text-[#1E2B58] hover:border-[#C62026] hover:text-[#C62026] uppercase font-black tracking-widest text-xs flex items-center gap-2 transition-all">
-                        <ArrowLeft className="w-4 h-4" /> Cancel Sync
-                    </Button>
-                </Link>
-            </div>
+        <div className="max-w-2xl mx-auto px-4 py-8 font-sans">
+            <Link href={`/profile/${firebaseUser?.uid}`} className="inline-flex flex-row items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600 mb-6 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50">
+                <ArrowLeft className="w-4 h-4" /> Back to Profile
+            </Link>
 
-            <form onSubmit={handleSubmit} className="px-4 space-y-8 pb-20">
-                {/* Basic Intel */}
-                <Card className="rounded-sm border-[1.5px] border-slate-200 overflow-hidden shadow-none">
-                    <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center gap-3">
-                        <User className="w-4 h-4 text-[#1E2B58]" />
-                        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1E2B58]">Core Personnel Data</h2>
-                    </div>
-                    <CardContent className="p-8 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Official Name</Label>
+            <Card className="bg-white border-slate-200 shadow-sm rounded-3xl overflow-hidden">
+                <div className="h-4 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500" />
+                <CardHeader className="pb-4 pt-8 px-8">
+                    <CardTitle className="text-2xl font-bold text-slate-800 tracking-tight">Edit Profile</CardTitle>
+                    <CardDescription className="text-slate-500 text-base">
+                        Update your information, academic details, and social links.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="px-8 pb-8">
+                    <form onSubmit={handleSubmit} className="space-y-8">
+                        {/* Personal Info Section */}
+                        <div className="space-y-5">
+                            <h3 className="text-sm font-bold text-slate-400 tracking-wider uppercase flex items-center gap-2 border-b border-slate-100 pb-2">
+                                <User className="w-4 h-4" /> Personal Details
+                            </h3>
+
+                            <div className="space-y-3">
+                                <Label className="text-slate-700 font-semibold">Display Name</Label>
                                 <Input
                                     value={form.display_name}
                                     onChange={e => setForm({ ...form, display_name: e.target.value })}
-                                    placeholder="Enter full name"
-                                    className="h-12 rounded-sm border-slate-200 focus-visible:ring-[#1E2B58] transition-all font-medium"
+                                    placeholder="Your full name"
+                                    className="bg-slate-50/50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-blue-600 shadow-sm h-11"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Academic Year</Label>
-                                <Select
-                                    value={form.year_of_study}
-                                    onValueChange={val => setForm({ ...form, year_of_study: val })}
-                                >
-                                    <SelectTrigger className="h-12 rounded-sm border-slate-200 focus:ring-[#1E2B58] uppercase font-bold text-[11px] tracking-widest">
-                                        <SelectValue placeholder="Select Year" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-sm border-slate-200 shadow-xl">
-                                        {[1, 2, 3, 4].map(y => (
-                                            <SelectItem key={y} value={y.toString()} className="font-bold uppercase tracking-widest text-[10px] py-3">
-                                                Year {y}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
 
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Professional Branch</Label>
-                            <Input
-                                value={form.branch}
-                                onChange={e => setForm({ ...form, branch: e.target.value })}
-                                placeholder="E.g., CSE - Data Science"
-                                className="h-12 rounded-sm border-slate-200 focus-visible:ring-[#1E2B58] font-medium"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Personal Narrative (Bio)</Label>
-                            <Textarea
-                                value={form.bio}
-                                onChange={e => setForm({ ...form, bio: e.target.value })}
-                                placeholder="Describe your specialization and core objectives..."
-                                className="min-h-[120px] rounded-sm border-slate-200 focus-visible:ring-[#1E2B58] font-medium resize-none p-4"
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* External Connectivity */}
-                <Card className="rounded-sm border-[1.5px] border-slate-200 overflow-hidden shadow-none">
-                    <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center gap-3">
-                        <Fingerprint className="w-4 h-4 text-[#C62026]" />
-                        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C62026]">Digital Authentication Links</h2>
-                    </div>
-                    <CardContent className="p-8 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2 group">
-                                <Label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                                    <Github className="w-3 h-3 transition-colors group-focus-within:text-[#1E2B58]" /> GitHub Vector
+                            <div className="space-y-3">
+                                <Label className="text-slate-700 font-semibold flex items-center justify-between">
+                                    Professional Email
+                                    <span className="text-xs font-normal text-slate-400">Optional</span>
                                 </Label>
                                 <Input
-                                    value={form.github_url}
-                                    onChange={e => setForm({ ...form, github_url: e.target.value })}
-                                    placeholder="https://github.com/..."
-                                    className="h-12 rounded-sm border-slate-200 focus-visible:ring-[#1E2B58]"
+                                    value={form.professional_email}
+                                    onChange={e => setForm({ ...form, professional_email: e.target.value })}
+                                    placeholder="name@company.com"
+                                    type="email"
+                                    className="bg-slate-50/50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-blue-600 shadow-sm h-11"
                                 />
                             </div>
-                            <div className="space-y-2 group">
-                                <Label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                                    <Linkedin className="w-3 h-3 transition-colors group-focus-within:text-[#1E2B58]" /> LinkedIn Node
+
+                            <div className="space-y-3">
+                                <Label className="text-slate-700 font-semibold flex items-center justify-between">
+                                    Bio
+                                    <span className={`text-xs ${form.bio.length > 180 ? 'text-amber-500 font-medium' : 'text-slate-400'}`}>
+                                        {form.bio.length}/200
+                                    </span>
                                 </Label>
-                                <Input
-                                    value={form.linkedin_url}
-                                    onChange={e => setForm({ ...form, linkedin_url: e.target.value })}
-                                    placeholder="https://linkedin.com/in/..."
-                                    className="h-12 rounded-sm border-slate-200 focus-visible:ring-[#1E2B58]"
+                                <Textarea
+                                    value={form.bio}
+                                    onChange={e => setForm({ ...form, bio: e.target.value.slice(0, 200) })}
+                                    placeholder="A short bio about yourself..."
+                                    className="bg-slate-50/50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-blue-600 shadow-sm min-h-[100px] resize-none pb-2 leading-relaxed"
+                                    maxLength={200}
                                 />
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2 group">
-                                <Label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                                    <Code2 className="w-3 h-3 transition-colors group-focus-within:text-[#1E2B58]" /> LeetCode Identifier
-                                </Label>
-                                <Input
-                                    value={form.leetcode_url}
-                                    onChange={e => setForm({ ...form, leetcode_url: e.target.value })}
-                                    placeholder="https://leetcode.com/u/..."
-                                    className="h-12 rounded-sm border-slate-200 focus-visible:ring-[#1E2B58]"
-                                />
-                            </div>
-                            <div className="space-y-2 group">
-                                <Label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                                    <Award className="w-3 h-3 transition-colors group-focus-within:text-[#1E2B58]" /> HackerRank Signature
-                                </Label>
-                                <Input
-                                    value={form.hackerrank_url}
-                                    onChange={e => setForm({ ...form, hackerrank_url: e.target.value })}
-                                    placeholder="https://hackerrank.com/..."
-                                    className="h-12 rounded-sm border-slate-200 focus-visible:ring-[#1E2B58]"
-                                />
+                        {/* Academic Section */}
+                        <div className="space-y-5">
+                            <h3 className="text-sm font-bold text-slate-400 tracking-wider uppercase flex items-center gap-2 border-b border-slate-100 pb-2">
+                                <GraduationCap className="w-4 h-4" /> Academic Info
+                            </h3>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div className="space-y-3">
+                                    <Label className="text-slate-700 font-semibold">Year of Study</Label>
+                                    <Select value={form.year_of_study} onValueChange={v => setForm({ ...form, year_of_study: v })}>
+                                        <SelectTrigger className="bg-slate-50/50 border-slate-200 text-slate-800 focus:ring-blue-600 shadow-sm h-11">
+                                            <SelectValue placeholder="Select year" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white border-slate-200 shadow-md rounded-xl">
+                                            {['1', '2', '3', '4'].map(y => (
+                                                <SelectItem key={y} value={y} className="text-slate-700 focus:bg-slate-50 focus:text-blue-700 cursor-pointer font-medium">Year {y}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-3">
+                                    <Label className="text-slate-700 font-semibold">Branch</Label>
+                                    <Input
+                                        value={form.branch}
+                                        onChange={e => setForm({ ...form, branch: e.target.value })}
+                                        placeholder="e.g., CSE, ECE, IT"
+                                        className="bg-slate-50/50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-blue-600 shadow-sm h-11 uppercase"
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
 
-                {/* Submission Flow */}
-                <div className="flex justify-end pt-4">
-                    <Button
-                        type="submit"
-                        disabled={saving}
-                        className="bg-[#C62026] hover:bg-[#a51a1f] text-white px-12 h-16 rounded-sm shadow-2xl hover:animate-pulse-interlock uppercase font-black tracking-[0.2em] text-xs flex items-center gap-3 transition-all"
-                    >
-                        {saving ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin" /> Committing...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="w-5 h-5" /> Synchronize Identity
-                            </>
-                        )}
-                    </Button>
-                </div>
-            </form>
+                        {/* Social Profiles Section */}
+                        <div className="space-y-5">
+                            <h3 className="text-sm font-bold text-slate-400 tracking-wider uppercase flex items-center gap-2 border-b border-slate-100 pb-2">
+                                <Briefcase className="w-4 h-4" /> Social Profiles
+                            </h3>
 
-            {/* Background Geometric Detail */}
-            <div className="fixed bottom-0 right-0 w-64 h-64 bg-[#1E2B58]/[0.02] -mr-32 -mb-32 rotate-45 pointer-events-none" />
+                            <div className="space-y-4">
+                                {[
+                                    { key: 'github_url', icon: Github, label: 'GitHub', placeholder: 'https://github.com/username', color: 'text-slate-700' },
+                                    { key: 'linkedin_url', icon: Linkedin, label: 'LinkedIn', placeholder: 'https://linkedin.com/in/username', color: 'text-blue-600' },
+                                    { key: 'leetcode_url', icon: Code2, label: 'LeetCode', placeholder: 'https://leetcode.com/username', color: 'text-amber-500' },
+                                    { key: 'hackerrank_url', icon: Award, label: 'HackerRank', placeholder: 'https://hackerrank.com/profile/username', color: 'text-emerald-500' },
+                                ].map(social => {
+                                    const Icon = social.icon
+                                    return (
+                                        <div key={social.key} className="relative group">
+                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors">
+                                                <Icon className={`w-5 h-5 ${social.color} opacity-70 group-focus-within:opacity-100 transition-opacity`} />
+                                            </div>
+                                            <Input
+                                                value={form[social.key as keyof typeof form]}
+                                                onChange={e => setForm({ ...form, [social.key]: e.target.value })}
+                                                placeholder={social.placeholder}
+                                                className="pl-11 bg-slate-50/50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-blue-600 shadow-sm h-11 transition-all"
+                                            />
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="pt-4">
+                            <Button
+                                type="submit"
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-0.5"
+                                disabled={saving}
+                            >
+                                {saving ? (
+                                    <span className="flex items-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> Saving Changes...</span>
+                                ) : (
+                                    <span className="flex items-center gap-2 text-base"><Save className="w-5 h-5" /> Save Profile</span>
+                                )}
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
         </div>
     )
-} 
+}
