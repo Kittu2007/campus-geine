@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { ShieldCheck, Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { ShieldCheck, Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff, Home } from 'lucide-react'
+import Link from 'next/link'
 
 export default function AdminLoginPage() {
     const router = useRouter()
@@ -83,6 +84,11 @@ export default function AdminLoginPage() {
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl" />
                 <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl" />
             </div>
+
+            <Link href="/" className="fixed top-6 left-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors font-medium bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-800 shadow-sm z-50">
+                <Home className="w-4 h-4" />
+                <span>Home</span>
+            </Link>
 
             <Card className="w-full max-w-md border-slate-700/50 bg-slate-800/80 backdrop-blur-xl shadow-2xl relative z-10">
                 <CardHeader className="text-center space-y-4">

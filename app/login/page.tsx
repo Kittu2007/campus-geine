@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Mail, Lock, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Home } from 'lucide-react'
+import Link from 'next/link'
 
 type Mode = 'signin' | 'signup'
 
@@ -116,6 +117,11 @@ export default function LoginPage() {
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl" />
                 <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-600/5 rounded-full blur-3xl" />
             </div>
+
+            <Link href="/" className="fixed top-6 left-6 flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-medium bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-200 shadow-sm z-50">
+                <Home className="w-4 h-4" />
+                <span>Home</span>
+            </Link>
 
             <Card className="w-full max-w-md border-slate-200 bg-white/90 backdrop-blur-xl shadow-xl relative z-10 rounded-2xl">
                 <CardHeader className="text-center space-y-4 pt-8">
